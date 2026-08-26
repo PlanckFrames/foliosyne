@@ -2,17 +2,27 @@ import { PDFDocument, StandardFonts, rgb } from "@cantoo/pdf-lib";
 import {
   AlignmentType,
   Document,
-  HeadingLevel,
+  FrameAnchorType,
+  FrameWrap,
+  HorizontalPositionRelativeFrom,
+  ImageRun,
+  LineRuleType,
   Packer,
   PageOrientation,
   Paragraph,
   SectionType,
   ShadingType,
   TextRun,
-  LineRuleType,
+  TextWrappingType,
+  VerticalPositionRelativeFrom,
 } from "docx";
 import JSZip from "jszip";
-import { extractPageLayout, type LayoutLine } from "@/lib/pdf/engine";
+import {
+  extractPageLayout,
+  rasterizePageBackdrop,
+  snapInkHex,
+  type LayoutLine,
+} from "@/lib/pdf/engine";
 import type { Annotation } from "@/lib/types";
 
 export interface DocBlock {
@@ -135,11 +145,32 @@ function ptToTwip(pt: number) {
   return Math.max(0, Math.round(pt * 20));
 }
 
-function mapFont(name: string): string {
-  const n = name.toLowerCase();
+function ptToPx(pt: number) {
+  return Math.max(1, Math.round((pt * 96) / 72));
+}
+
+function mapFont(name?: string): string {
+  const n = (name || "").toLowerCase();
   if (/courier|mono/.test(n)) return "Courier New";
-  if (/helvetica|arial|sans|outfit/.test(n)) return "Arial";
+  if (/times|georgia|garamond|\bserif\b/.test(n) && !/sans/.test(n)) {
+    return /georgia/.test(n) ? "Georgia" : "Times New Roman";
+  }
+  if (/helvetica|arial|sans|calibri|outfit/.test(n)) return "Arial";
   return "Times New Roman";
+}
+
+function runFont(name?: string) {
+  const mapped = mapFont(name);
+  return { ascii: mapped, hAnsi: mapped, cs: mapped, eastAsia: mapped };
+}
+
+function inkColor(color?: string): string {
+  const hex = (color || "1C1917").replace("#", "");
+  if (!/^[0-9A-Fa-f]{6}$/.test(hex)) return "1C1917";
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  return snapInkHex(r, g, b);
 }
 
 function lineCovered(
@@ -152,10 +183,14 @@ function lineCovered(
   const box = {
     x: line.x / pageW,
     y: line.y / pageH,
-    w: line.w / pageW,
-    h: line.h / pageH,
+    w: Math.max(line.w, 1) / pageW,
+    h: Math.max(line.h, 1) / pageH,
   };
   return annotationCovers(annotations, pageIndex, box);
+}
+
+function halfPoints(pt: number) {
+  return Math.max(14, Math.min(96, Math.round(pt * 2)));
 }
 
 export async function pdfPagesToDocx(opts: {
@@ -175,134 +210,171 @@ export async function pdfPagesToDocx(opts: {
     const pageW = layout.widthPt;
     const pageH = layout.heightPt;
     const landscape = pageW > pageH;
+    const redactions = annotations
+      .filter((a) => a.type === "redact" && a.pageIndex === original)
+      .map((a) => ({ x: a.x, y: a.y, w: a.w, h: a.h }));
 
-    const visible = layout.lines.filter(
+    const backdrop = await rasterizePageBackdrop({
+      pageNumber: original + 1,
+      extraRotation: extra,
+      lines: layout.lines,
+      redactions,
+    });
+
+    const visible = backdrop.lines.filter(
       (line) =>
         line.text.trim() &&
         !lineCovered(annotations, original, line, pageW, pageH),
     );
 
-    const xs = visible.map((l) => l.x);
-    const rights = visible.map((l) => l.x + l.w);
-    const ys = visible.map((l) => l.y);
-    const bottoms = visible.map((l) => l.y + l.h);
-    const marginLeft = Math.max(36, Math.min(72, xs.length ? Math.min(...xs) : 64));
-    const marginRight = Math.max(
-      36,
-      Math.min(72, pageW - (rights.length ? Math.max(...rights) : pageW - 64)),
-    );
-    const marginTop = Math.max(36, Math.min(72, ys.length ? Math.min(...ys) : 64));
-    const marginBottom = Math.max(
-      36,
-      Math.min(72, pageH - (bottoms.length ? Math.max(...bottoms) : pageH - 64)),
+    const pageEdits = annotations.filter(
+      (a) =>
+        a.pageIndex === original &&
+        a.type === "edit" &&
+        (a.text || "").trim(),
     );
 
-    const sizes = visible.map((l) => l.fontSize).sort((a, b) => a - b);
-    const median = sizes[Math.floor(sizes.length / 2)] ?? 11;
+    const bg = new Paragraph({
+      spacing: { before: 0, after: 0, line: 20, lineRule: LineRuleType.EXACT },
+      children: [
+        new ImageRun({
+          type: "png",
+          data: backdrop.bytes,
+          transformation: {
+            width: ptToPx(pageW),
+            height: ptToPx(pageH),
+          },
+          floating: {
+            horizontalPosition: {
+              relative: HorizontalPositionRelativeFrom.PAGE,
+              offset: 0,
+            },
+            verticalPosition: {
+              relative: VerticalPositionRelativeFrom.PAGE,
+              offset: 0,
+            },
+            wrap: { type: TextWrappingType.NONE },
+            behindDocument: true,
+            allowOverlap: true,
+          },
+        }),
+      ],
+    });
 
-    const children: Paragraph[] = [];
-    let prevBottom = marginTop;
-
-    const redactions = annotations.filter(
-      (a) => a.type === "redact" && a.pageIndex === original,
-    );
-    const placedRedact = new Set<string>();
-
-    const insertRedactionsUntil = (y: number) => {
-      for (const r of redactions) {
-        const top = r.y * pageH;
-        if (top > y) continue;
-        const key = r.id;
-        if (placedRedact.has(key)) continue;
-        placedRedact.add(key);
-        children.push(
-          new Paragraph({
-            spacing: { before: 80, after: 80 },
-            shading: { type: ShadingType.CLEAR, fill: "000000" },
-            children: [
-              new TextRun({
-                text: " ".repeat(Math.max(8, Math.round((r.w * pageW) / 6))),
-                size: Math.max(16, Math.round(r.h * pageH * 2)),
-                color: "000000",
-              }),
-            ],
+    const frameFor = (opts: {
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      fontSize: number;
+      text: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strike?: boolean;
+      superScript?: boolean;
+      subScript?: boolean;
+      fontName?: string;
+      color?: string;
+    }) => {
+      const size = halfPoints(opts.fontSize);
+      const frameH = Math.max(opts.h + 4, opts.fontSize * 1.45);
+      return new Paragraph({
+        frame: {
+          type: "absolute",
+          position: {
+            x: ptToTwip(Math.max(0, opts.x)),
+            y: ptToTwip(Math.max(0, opts.y)),
+          },
+          width: ptToTwip(Math.max(opts.w + 12, 28)),
+          height: ptToTwip(frameH),
+          wrap: FrameWrap.NONE,
+          anchor: {
+            horizontal: FrameAnchorType.PAGE,
+            vertical: FrameAnchorType.PAGE,
+          },
+        },
+        spacing: {
+          before: 0,
+          after: 0,
+          line: Math.round(Math.max(opts.fontSize * 1.15, 10) * 20),
+          lineRule: LineRuleType.EXACT,
+        },
+        alignment: AlignmentType.START,
+        children: [
+          new TextRun({
+            text: opts.text.replace(/\s+/g, " "),
+            bold: opts.bold,
+            italics: opts.italic,
+            underline: opts.underline ? { type: "single" } : undefined,
+            strike: opts.strike,
+            superScript: opts.superScript,
+            subScript: opts.subScript,
+            size,
+            font: runFont(opts.fontName),
+            color: inkColor(opts.color),
           }),
-        );
-      }
+        ],
+      });
     };
 
-    for (const line of visible) {
-      insertRedactionsUntil(line.y);
-      const gap = Math.max(0, line.y - prevBottom);
-      const before = ptToTwip(Math.max(0, gap - 1));
-      const indent = ptToTwip(Math.max(0, line.x - marginLeft));
-      const size = Math.max(16, Math.round(line.fontSize * 2));
-      const font = mapFont(line.fontName);
-      const trimmed = line.text.replace(/\s+/g, " ").trim();
-      if (!trimmed) continue;
-
-      const centered =
-        Math.abs(line.x + line.w / 2 - pageW / 2) < 28 &&
-        line.x > marginLeft + 12;
-
-      const isTitle = line.fontSize >= median * 2.1 || /^[A-Z0-9][A-Z0-9 \-]{3,}$/.test(trimmed);
-      const isH1 = !isTitle && line.fontSize >= median * 1.55;
-      const isH2 = !isTitle && !isH1 && line.fontSize >= median * 1.28;
-
-      const run = new TextRun({
-        text: trimmed,
-        bold: line.bold || isTitle || isH1,
-        italics: line.italic,
-        size,
-        font,
-        color: "1C1917",
-      });
-
-      children.push(
-        new Paragraph({
-          heading: isTitle
-            ? HeadingLevel.TITLE
-            : isH1
-              ? HeadingLevel.HEADING_1
-              : isH2
-                ? HeadingLevel.HEADING_2
-                : undefined,
-          alignment: centered ? AlignmentType.CENTER : AlignmentType.START,
-          indent: centered ? undefined : { left: indent },
-          spacing: {
-            before,
-            after: isTitle || isH1 ? 120 : 40,
-            line: 276,
-            lineRule: LineRuleType.AUTO,
-          },
-          children: [run],
-        }),
-      );
-      prevBottom = line.y + line.h;
-    }
-    insertRedactionsUntil(pageH);
+    const framed =
+      pageEdits.length > 0
+        ? pageEdits.map((a) =>
+            frameFor({
+              x: a.x * pageW,
+              y: a.y * pageH,
+              w: a.w * pageW,
+              h: a.h * pageH,
+              fontSize: a.fontSize ?? 12,
+              text: a.text || "",
+              bold: a.bold,
+              italic: a.italic,
+              underline: a.underline,
+              strike: a.strike,
+              superScript: a.superScript,
+              subScript: a.subScript,
+              fontName: a.fontFamily,
+              color: a.color,
+            }),
+          )
+        : visible.map((line) =>
+            frameFor({
+              x: line.x,
+              y: line.y,
+              w: line.w,
+              h: line.h,
+              fontSize: line.fontSize,
+              text: line.text,
+              bold: line.bold,
+              italic: line.italic,
+              fontName: line.fontName,
+              color: line.color,
+            }),
+          );
 
     for (const a of annotations) {
       if (a.pageIndex !== original) continue;
       if (a.type === "text" && a.text?.trim()) {
-        children.push(
-          new Paragraph({
-            spacing: { before: 80 },
-            children: [
-              new TextRun({
-                text: a.text.trim(),
-                size: 22,
-                font: "Times New Roman",
-                color: "1C1917",
-              }),
-            ],
+        framed.push(
+          frameFor({
+            x: a.x * pageW,
+            y: a.y * pageH,
+            w: Math.max(a.w * pageW, 48),
+            h: Math.max(a.h * pageH, 16),
+            fontSize: a.fontSize ?? 12,
+            text: a.text,
+            bold: a.bold,
+            italic: a.italic,
+            underline: a.underline,
+            strike: a.strike,
+            superScript: a.superScript,
+            subScript: a.subScript,
+            fontName: a.fontFamily,
+            color: a.color,
           }),
         );
       }
-    }
-
-    if (!children.length) {
-      children.push(new Paragraph({ children: [] }));
     }
 
     sections.push({
@@ -317,22 +389,33 @@ export async function pdfPagesToDocx(opts: {
               : PageOrientation.PORTRAIT,
           },
           margin: {
-            top: ptToTwip(marginTop),
-            right: ptToTwip(marginRight),
-            bottom: ptToTwip(marginBottom),
-            left: ptToTwip(marginLeft),
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
             header: 0,
             footer: 0,
           },
         },
       },
-      children,
+      children: [bg, ...framed],
     });
   }
 
   const doc = new Document({
     title: opts.title,
     creator: "Foliosyne",
+    description: "Word conversion with page artwork and real editable text.",
+    styles: {
+      default: {
+        document: {
+          run: {
+            font: "Times New Roman",
+            color: "1C1917",
+          },
+        },
+      },
+    },
     sections,
   });
   return Packer.toBlob(doc);

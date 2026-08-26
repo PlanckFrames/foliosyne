@@ -1,0 +1,1 @@
+function e(e){return new Worker(`/assets/pdf.worker.min-CEW13i4f.js`,{name:e?.name})}export{e as default};

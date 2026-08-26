@@ -145,6 +145,10 @@ export async function extractPageLayout(
   const viewport = page.getViewport({ scale: 1, rotation: rot });
   const content = await page.getTextContent();
   const spans: LayoutSpan[] = [];
+  const fontStyles = (content.styles ?? {}) as Record<
+    string,
+    { fontFamily?: string; ascent?: number }
+  >;
 
   for (const raw of content.items) {
     if (!raw || typeof raw !== "object" || !("str" in raw)) continue;
@@ -170,6 +174,11 @@ export async function extractPageLayout(
     const h = Math.max(1, Math.abs(p2[1] - p1[1]));
     const fontSize = Math.max(h, Math.hypot(tx[0] ?? 0, tx[1] ?? 0));
     const fontName = item.fontName || "";
+    const family = fontStyles[fontName]?.fontFamily || "";
+    const resolved =
+      /times|helv|cour|arial|georgia|garamond|roman/i.test(fontName)
+        ? fontName
+        : family || fontName;
     spans.push({
       text,
       x,
@@ -177,9 +186,9 @@ export async function extractPageLayout(
       w,
       h,
       fontSize,
-      fontName,
-      bold: /bold|black|heavy|semibold/i.test(fontName),
-      italic: /italic|oblique/i.test(fontName),
+      fontName: resolved || fontName,
+      bold: /bold|black|heavy|semibold/i.test(`${resolved} ${fontName}`),
+      italic: /italic|oblique/i.test(`${resolved} ${fontName}`),
     });
   }
 
@@ -414,4 +423,222 @@ export async function rasterizePage(opts: {
     widthPt: base.width,
     heightPt: base.height,
   };
+}
+
+function rgbHex(r: number, g: number, b: number) {
+  const h = (n: number) => Math.max(0, Math.min(255, n)).toString(16).padStart(2, "0");
+  return `${h(r)}${h(g)}${h(b)}`.toUpperCase();
+}
+
+/** Collapse JPEG fringe samples to ink; keep only true dark accents (teal). */
+export function snapInkHex(r: number, g: number, b: number): string {
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const lum = (r + g + b) / 3;
+  const sat = max === 0 ? 0 : (max - min) / max;
+  if (lum > 110 || sat < 0.32) return "1C1917";
+  const teal = g >= r + 12 && g >= b - 8 && lum < 110;
+  if (teal) return rgbHex(r, g, b);
+  return "1C1917";
+}
+
+export type ColoredLine = LayoutLine & { color: string };
+
+/** Page artwork only — PDF text operators are not drawn, so Word can overlay real text. */
+export async function rasterizePageBackdrop(opts: {
+  pageNumber: number;
+  extraRotation?: number;
+  lines: LayoutLine[];
+  redactions?: { x: number; y: number; w: number; h: number }[];
+}): Promise<{
+  bytes: Uint8Array;
+  widthPt: number;
+  heightPt: number;
+  lines: ColoredLine[];
+}> {
+  const lib = await loadPdfjs();
+  const page = await getPage(opts.pageNumber);
+  const extra = opts.extraRotation ?? 0;
+  const rot = ((page.rotate + extra) % 360 + 360) % 360;
+  const scale = 2;
+  const viewport = page.getViewport({ scale, rotation: rot });
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.floor(viewport.width));
+  canvas.height = Math.max(1, Math.floor(viewport.height));
+  const ctx = canvas.getContext("2d", { alpha: false });
+  if (!ctx) throw new Error("Could not rasterize page");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const OPS = lib.OPS;
+  const skipText = new Set<number>([
+    OPS.showText,
+    OPS.showSpacedText,
+    OPS.nextLineShowText,
+    OPS.nextLineSetSpacingShowText,
+  ]);
+  const opList = await page.getOperatorList();
+  const fnArray = opList.fnArray;
+  const renderOpts = {
+    canvasContext: ctx,
+    viewport,
+    canvas,
+    operationsFilter: (idx: number) => !skipText.has(fnArray[idx] ?? -1),
+  };
+  const task = page.render(
+    renderOpts as unknown as Parameters<PDFPageProxy["render"]>[0],
+  );
+  await task.promise;
+
+  const w = canvas.width;
+  const h = canvas.height;
+
+  const colored: ColoredLine[] = opts.lines.map((line) => ({
+    ...line,
+    color: "1C1917",
+  }));
+
+  if (opts.redactions?.length) {
+    ctx.fillStyle = "#000000";
+    for (const r of opts.redactions) {
+      ctx.fillRect(r.x * w - 2, r.y * h - 2, r.w * w + 4, r.h * h + 4);
+    }
+  }
+
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("Rasterize failed"))),
+      "image/png",
+    );
+  });
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  const base = page.getViewport({ scale: 1, rotation: rot });
+  return { bytes, widthPt: base.width, heightPt: base.height, lines: colored };
+}
+
+function samplePaperColor(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+) {
+  const pts = [
+    [Math.floor(w * 0.5), Math.floor(h * 0.45)],
+    [40, Math.floor(h * 0.45)],
+    [Math.floor(w * 0.5), Math.floor(h * 0.3)],
+    [Math.floor(w - 40), Math.floor(h * 0.5)],
+    [8, 8],
+    [w - 8, h - 8],
+  ] as const;
+  for (const [x, y] of pts) {
+    const d = ctx.getImageData(
+      Math.max(0, Math.min(w - 1, x)),
+      Math.max(0, Math.min(h - 1, y)),
+      1,
+      1,
+    ).data;
+    const r = d[0] ?? 244;
+    const g = d[1] ?? 239;
+    const b = d[2] ?? 230;
+    if (r > 210 && g > 200 && b > 190) return `rgb(${r},${g},${b})`;
+  }
+  return "rgb(244,239,230)";
+}
+
+export async function paintTextOnRaster(
+  raster: {
+    bytes: Uint8Array;
+    widthPx: number;
+    heightPx: number;
+    widthPt: number;
+    heightPt: number;
+  },
+  overlays: Array<{
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    text: string;
+    fontSize?: number;
+    fontFamily?: string;
+    bold?: boolean;
+    italic?: boolean;
+    underline?: boolean;
+    strike?: boolean;
+    color?: string;
+    align?: "left" | "center" | "right";
+    knockout?: boolean;
+    originX?: number;
+    originY?: number;
+    originW?: number;
+    originH?: number;
+  }>,
+): Promise<Uint8Array> {
+  const blob = new Blob([new Uint8Array(raster.bytes)], { type: "image/png" });
+  const bmp = await createImageBitmap(blob);
+  const canvas = document.createElement("canvas");
+  canvas.width = raster.widthPx;
+  canvas.height = raster.heightPx;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return raster.bytes;
+  ctx.drawImage(bmp, 0, 0);
+  bmp.close();
+  const W = canvas.width;
+  const H = canvas.height;
+  const pt = W / raster.widthPt;
+
+  const paper = samplePaperColor(ctx, W, H);
+  for (const o of overlays) {
+    if (o.knockout) {
+      const ox = (o.originX ?? o.x) * W;
+      const oy = (o.originY ?? o.y) * H;
+      const ow = Math.max(8, (o.originW ?? o.w) * W);
+      const oh = Math.max(8, (o.originH ?? o.h) * H);
+      const padX = Math.max(8, ow * 0.04);
+      const padY = Math.max(6, oh * 0.28);
+      ctx.fillStyle = paper;
+      ctx.fillRect(ox - padX, oy - padY * 0.5, ow + padX * 2, oh + padY * 1.4);
+    }
+    const x = o.x * W;
+    const y = o.y * H;
+    const w = Math.max(8, o.w * W);
+    const h = Math.max(8, o.h * H);
+    const sizePx = Math.max(8, (o.fontSize ?? 12) * pt);
+    const weight = o.bold ? "700" : "400";
+    const style = o.italic ? "italic" : "normal";
+    ctx.font = `${style} ${weight} ${sizePx}px ${o.fontFamily || "Times New Roman"}`;
+    ctx.fillStyle = o.color?.startsWith("#") ? o.color : `#${o.color || "1C1917"}`;
+    ctx.textBaseline = "top";
+    ctx.textAlign = o.align === "center" ? "center" : o.align === "right" ? "right" : "left";
+    const tx = o.align === "center" ? x + w / 2 : o.align === "right" ? x + w : x + 1;
+    const lines = (o.text || "").split("\n");
+    let ty = y + 1;
+    for (const line of lines) {
+      ctx.fillText(line, tx, ty, w);
+      if (o.underline || o.strike) {
+        const tw = Math.min(w, ctx.measureText(line).width);
+        const x0 = o.align === "center" ? tx - tw / 2 : o.align === "right" ? tx - tw : tx;
+        ctx.strokeStyle = ctx.fillStyle;
+        ctx.lineWidth = Math.max(1, sizePx * 0.06);
+        ctx.beginPath();
+        if (o.underline) {
+          ctx.moveTo(x0, ty + sizePx * 0.95);
+          ctx.lineTo(x0 + tw, ty + sizePx * 0.95);
+        }
+        if (o.strike) {
+          ctx.moveTo(x0, ty + sizePx * 0.5);
+          ctx.lineTo(x0 + tw, ty + sizePx * 0.5);
+        }
+        ctx.stroke();
+      }
+      ty += sizePx * 1.2;
+    }
+  }
+
+  const out = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("Paint failed"))),
+      "image/png",
+    );
+  });
+  return new Uint8Array(await out.arrayBuffer());
 }

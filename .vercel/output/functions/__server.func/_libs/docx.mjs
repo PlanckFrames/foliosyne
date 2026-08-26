@@ -15562,6 +15562,38 @@ var createWordWrap = () => new BuilderElement({
 	} }
 });
 /**
+* Frame anchor types specifying what the frame should be anchored relative to.
+*
+* Determines the reference point for frame positioning (horizontal and vertical).
+*/
+var FrameAnchorType = {
+	/** Anchor relative to the page margin */
+	MARGIN: "margin",
+	/** Anchor relative to the page edge */
+	PAGE: "page",
+	/** Anchor relative to the text column */
+	TEXT: "text"
+};
+/**
+* Text wrapping types for frames.
+*
+* Controls how surrounding text wraps around the frame.
+*/
+var FrameWrap = {
+	/** Wrap text around the frame on all sides */
+	AROUND: "around",
+	/** Automatic wrapping based on available space */
+	AUTO: "auto",
+	/** No text wrapping */
+	NONE: "none",
+	/** Do not allow text beside the frame */
+	NOT_BESIDE: "notBeside",
+	/** Allow text to flow through the frame */
+	THROUGH: "through",
+	/** Wrap text tightly around the frame */
+	TIGHT: "tight"
+};
+/**
 * Creates a frame properties XML component for paragraph text frames.
 *
 * Frames allow paragraphs to be positioned absolutely on the page with text wrapping.
@@ -25730,4 +25762,4 @@ var findPatchKeys = (text) => {
 	return (_text$match = text.match(pattern)) !== null && _text$match !== void 0 ? _text$match : [];
 };
 //#endregion
-export { PageOrientation as a, TextWrappingType as c, Packer as i, VerticalPositionRelativeFrom as l, HorizontalPositionRelativeFrom as n, Paragraph as o, ImageRun as r, SectionType as s, File as t };
+export { HorizontalPositionRelativeFrom as a, Packer as c, SectionType as d, TextRun as f, FrameWrap as i, PageOrientation as l, VerticalPositionRelativeFrom as m, File as n, ImageRun as o, TextWrappingType as p, FrameAnchorType as r, LineRuleType as s, AlignmentType as t, Paragraph as u };

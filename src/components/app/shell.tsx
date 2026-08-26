@@ -1,5 +1,10 @@
 import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
   BookmarkPlus,
+  Bold,
+  Check,
   ChevronDown,
   ChevronUp,
   FileOutput,
@@ -8,20 +13,29 @@ import {
   Hand,
   HelpCircle,
   Highlighter,
+  Italic,
   Languages,
+  List,
   Lock,
   Menu,
   MessageSquare,
   Moon,
   MousePointer2,
+  Pencil,
   PenLine,
   Printer,
+  Undo2,
+  Redo2,
   RotateCw,
   Save,
   Scan,
   Share2,
+  Strikethrough,
+  Subscript,
   Sun,
+  Superscript,
   Type,
+  Underline,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
@@ -32,11 +46,12 @@ import { Tip, TooltipProvider } from "@/components/ui/tooltip";
 import { LANGS, langMeta } from "@/lib/i18n";
 import { getFile, listRecentMeta } from "@/lib/idb";
 import { ingestFile, ingestPdf, openSampleDocument } from "@/lib/open-document";
+import { seedPageEdits, EDIT_FONTS } from "@/lib/edit-pdf";
 import { detectHeadings } from "@/lib/pdf/engine";
 import { bakePdf } from "@/lib/pdf/mutate";
 import { printStudio } from "@/lib/print";
 import { useAppStore, useT } from "@/lib/store";
-import type { RecentFile, Tool, UiLang } from "@/lib/types";
+import type { Annotation, RecentFile, Tool, UiLang } from "@/lib/types";
 import { bytesToBlob, downloadBlob, formatBytes } from "@/lib/utils";
 import { FolioMark } from "./mark";
 import { AppPanels } from "./panels";
@@ -178,7 +193,19 @@ function useHotkeys() {
         setCurrentPage(n);
         scrollToPage(n);
       }
-      if (e.key === "Escape") setPanel(null);
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        if (e.shiftKey) useAppStore.getState().redo();
+        else useAppStore.getState().undo();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "y") {
+        e.preventDefault();
+        useAppStore.getState().redo();
+      }
+      if (e.key === "Escape") {
+        setPanel(null);
+        useAppStore.getState().setActiveAnnotation(null);
+      }
       if ((e.key === "Delete" || e.key === "Backspace") && activeAnnotation) {
         const tag = (e.target as HTMLElement | null)?.tagName;
         if (tag === "INPUT" || tag === "TEXTAREA") return;
@@ -234,6 +261,10 @@ function TopBar() {
   const bytes = useAppStore((s) => s.bytes);
   const setLeftOpen = useAppStore((s) => s.setLeftOpen);
   const leftOpen = useAppStore((s) => s.leftOpen);
+  const canUndo = useAppStore((s) => s.past.length > 0);
+  const canRedo = useAppStore((s) => s.future.length > 0);
+  const undo = useAppStore((s) => s.undo);
+  const redo = useAppStore((s) => s.redo);
 
   return (
     <header className="no-print flex h-14 shrink-0 items-center gap-2 border-b border-border bg-surface/90 px-2 backdrop-blur md:px-4">
@@ -278,6 +309,28 @@ function TopBar() {
         <Tip label={t("action.save")}>
           <Button variant="ghost" size="icon-sm" aria-label={t("action.save")} disabled={!bytes} onClick={() => void saveCurrent()}>
             <Save />
+          </Button>
+        </Tip>
+        <Tip label={`${t("action.undo")} (Ctrl+Z)`}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t("action.undo")}
+            disabled={!bytes || !canUndo}
+            onClick={() => undo()}
+          >
+            <Undo2 />
+          </Button>
+        </Tip>
+        <Tip label={`${t("action.redo")} (Ctrl+Y)`}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t("action.redo")}
+            disabled={!bytes || !canRedo}
+            onClick={() => redo()}
+          >
+            <Redo2 />
           </Button>
         </Tip>
         <Tip label={t("action.print")}>
@@ -343,6 +396,7 @@ function Studio() {
       <LeftRail />
       <div className="flex min-w-0 flex-1 flex-col">
         <ToolStrip />
+        <EditBar />
         <div className="min-h-0 flex-1">
           <Viewer />
         </div>
@@ -363,8 +417,6 @@ function ToolStrip() {
   const currentPage = useAppStore((s) => s.currentPage);
   const pageCount = useAppStore((s) => s.pageCount);
   const setCurrentPage = useAppStore((s) => s.setCurrentPage);
-  const movePage = useAppStore((s) => s.movePage);
-  const rotatePages = useAppStore((s) => s.rotatePages);
   const pageOrder = useAppStore((s) => s.pageOrder);
 
   const tools: {
@@ -375,7 +427,7 @@ function ToolStrip() {
   }[] = [
     { id: "select", icon: MousePointer2, key: "tool.select", help: "tool.help.select" },
     { id: "pan", icon: Hand, key: "tool.pan", help: "tool.help.pan" },
-    { id: "text", icon: Type, key: "tool.text", help: "tool.help.text" },
+    { id: "edit", icon: Pencil, key: "tool.edit", help: "tool.help.edit" },
     { id: "highlight", icon: Highlighter, key: "tool.highlight", help: "tool.help.highlight" },
     { id: "comment", icon: MessageSquare, key: "tool.comment", help: "tool.help.comment" },
     { id: "redact", icon: Scan, key: "tool.redact", help: "tool.help.redact" },
@@ -396,6 +448,12 @@ function ToolStrip() {
               onClick={() => {
                 if (item.id === "sign") setPanel("sign");
                 setTool(item.id);
+                if (item.id === "edit") {
+                  useAppStore.getState().setEditGesture("select");
+                  const st = useAppStore.getState();
+                  const orig = st.pageOrder[st.currentPage - 1] ?? 0;
+                  void seedPageEdits(orig, st.rotations[orig] ?? 0);
+                }
               }}
             >
               <Icon />
@@ -453,36 +511,12 @@ function ToolStrip() {
           <ChevronDown />
         </Button>
       </Tip>
-      <Tip label={t("view.moveUp")}>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={t("view.moveUp")}
-          onClick={() => movePage(currentPage - 1, -1)}
-        >
-          <ChevronUp />
-        </Button>
-      </Tip>
-      <Tip label={t("view.moveDown")}>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={t("view.moveDown")}
-          onClick={() => movePage(currentPage - 1, 1)}
-        >
-          <ChevronDown />
-        </Button>
-      </Tip>
-      <Tip label={t("view.rotatePage")}>
+      <Tip label={t("rotate.title")}>
         <Button
           variant="ghost"
           size="icon-sm"
           aria-label={t("action.rotate")}
-          onClick={() => {
-            const orig = pageOrder[currentPage - 1];
-            if (orig != null) rotatePages([orig], 90);
-            else setPanel("rotate");
-          }}
+          onClick={() => setPanel("rotate")}
         >
           <RotateCw />
         </Button>
@@ -496,6 +530,259 @@ function ToolStrip() {
         <Tip label={t("action.protect")}>
           <Button variant="ghost" size="icon-sm" aria-label={t("action.protect")} onClick={() => setPanel("protect")}>
             <Lock />
+          </Button>
+        </Tip>
+      </div>
+    </div>
+  );
+}
+
+function EditBar() {
+  const t = useT();
+  const tool = useAppStore((s) => s.tool);
+  const editGesture = useAppStore((s) => s.editGesture);
+  const setEditGesture = useAppStore((s) => s.setEditGesture);
+  const confirmEdits = useAppStore((s) => s.confirmEdits);
+  const setStatus = useAppStore((s) => s.setStatus);
+  const updateAnnotation = useAppStore((s) => s.updateAnnotation);
+  const activeAnnotation = useAppStore((s) => s.activeAnnotation);
+  const annotations = useAppStore((s) => s.annotations);
+  const currentPage = useAppStore((s) => s.currentPage);
+  const pageOrder = useAppStore((s) => s.pageOrder);
+  const movePage = useAppStore((s) => s.movePage);
+  const active = annotations.find((a) => a.id === activeAnnotation && a.type === "edit");
+
+  if (tool !== "edit") return null;
+
+  const patch = (p: Partial<Annotation>) => {
+    if (!active) return;
+    updateAnnotation(active.id, p);
+  };
+
+  const addText = () => {
+    setEditGesture("place");
+    setStatus(t("edit.placeHint"));
+  };
+
+  const confirm = () => {
+    confirmEdits();
+    setStatus("");
+    toast.success(t("edit.confirmed"));
+  };
+
+  const btn = (on: boolean) =>
+    on ? "bg-accent text-accent-fg" : "text-fg hover:bg-paper";
+
+  return (
+    <div className="no-print flex flex-wrap items-center gap-1 border-b border-border bg-paper px-2 py-1.5">
+      <span className="pe-2 text-[11px] font-medium uppercase tracking-wide text-subtle">
+        {t("tool.edit")}
+      </span>
+      <Tip label={t("tool.select")}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className={btn(editGesture === "select")}
+          aria-pressed={editGesture === "select"}
+          aria-label={t("tool.select")}
+          onClick={() => setEditGesture("select")}
+        >
+          <MousePointer2 />
+        </Button>
+      </Tip>
+      <Tip label={t("tool.pan")}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className={btn(editGesture === "pan")}
+          aria-pressed={editGesture === "pan"}
+          aria-label={t("tool.pan")}
+          onClick={() => setEditGesture("pan")}
+        >
+          <Hand />
+        </Button>
+      </Tip>
+      <Tip label={t("edit.addText")}>
+        <Button
+          variant={editGesture === "place" ? "default" : "outline"}
+          size="sm"
+          onClick={addText}
+        >
+          <Type />
+          {t("edit.addText")}
+        </Button>
+      </Tip>
+      <select
+        className="h-8 max-w-40 rounded-sm border border-border bg-surface px-2 text-xs"
+        aria-label={t("edit.font")}
+        value={active?.fontFamily || "Times New Roman"}
+        onChange={(e) => patch({ fontFamily: e.target.value })}
+      >
+        {EDIT_FONTS.map((f) => (
+          <option key={f} value={f}>
+            {f}
+          </option>
+        ))}
+      </select>
+      <input
+        type="number"
+        min={8}
+        max={72}
+        className="h-8 w-14 rounded-sm border border-border bg-surface px-1 text-xs"
+        aria-label={t("edit.size")}
+        value={Math.round(active?.fontSize || 12)}
+        onChange={(e) => patch({ fontSize: Number(e.target.value) || 12 })}
+      />
+      <Tip label={t("edit.bold")}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className={btn(!!active?.bold)}
+          aria-pressed={!!active?.bold}
+          onClick={() => patch({ bold: !active?.bold })}
+        >
+          <Bold />
+        </Button>
+      </Tip>
+      <Tip label={t("edit.italic")}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className={btn(!!active?.italic)}
+          aria-pressed={!!active?.italic}
+          onClick={() => patch({ italic: !active?.italic })}
+        >
+          <Italic />
+        </Button>
+      </Tip>
+      <Tip label={t("edit.underline")}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className={btn(!!active?.underline)}
+          aria-pressed={!!active?.underline}
+          onClick={() => patch({ underline: !active?.underline })}
+        >
+          <Underline />
+        </Button>
+      </Tip>
+      <Tip label={t("edit.strike")}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className={btn(!!active?.strike)}
+          aria-pressed={!!active?.strike}
+          onClick={() => patch({ strike: !active?.strike })}
+        >
+          <Strikethrough />
+        </Button>
+      </Tip>
+      <Tip label={t("edit.super")}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className={btn(!!active?.superScript)}
+          onClick={() => patch({ superScript: !active?.superScript, subScript: false })}
+        >
+          <Superscript />
+        </Button>
+      </Tip>
+      <Tip label={t("edit.sub")}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className={btn(!!active?.subScript)}
+          onClick={() => patch({ subScript: !active?.subScript, superScript: false })}
+        >
+          <Subscript />
+        </Button>
+      </Tip>
+      <input
+        type="color"
+        className="size-8 cursor-pointer rounded-sm border border-border bg-surface p-0.5"
+        aria-label={t("edit.color")}
+        value={active?.color || "#1C1917"}
+        onChange={(e) => patch({ color: e.target.value })}
+      />
+      <Tip label={t("edit.alignLeft")}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className={btn(active?.align === "left" || !active?.align)}
+          onClick={() => patch({ align: "left" })}
+        >
+          <AlignLeft />
+        </Button>
+      </Tip>
+      <Tip label={t("edit.alignCenter")}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className={btn(active?.align === "center")}
+          onClick={() => patch({ align: "center" })}
+        >
+          <AlignCenter />
+        </Button>
+      </Tip>
+      <Tip label={t("edit.alignRight")}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className={btn(active?.align === "right")}
+          onClick={() => patch({ align: "right" })}
+        >
+          <AlignRight />
+        </Button>
+      </Tip>
+      <Tip label={t("edit.indent")}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => patch({ indent: Math.min(48, (active?.indent || 0) + 12) })}
+        >
+          {t("edit.indent")}
+        </Button>
+      </Tip>
+      <label className="flex items-center gap-1 text-xs text-muted">
+        <List className="size-3.5" />
+        <select
+          className="h-8 rounded-sm border border-border bg-surface px-1 text-xs"
+          aria-label={t("edit.bullet")}
+          value={active?.list || "none"}
+          onChange={(e) => patch({ list: e.target.value as Annotation["list"] })}
+        >
+          <option value="none">—</option>
+          <option value="disc">{t("edit.bulletDisc")}</option>
+          <option value="circle">{t("edit.bulletCircle")}</option>
+          <option value="square">{t("edit.bulletSquare")}</option>
+          <option value="dash">{t("edit.bulletDash")}</option>
+        </select>
+      </label>
+      <div className="ms-auto flex items-center gap-1">
+        <Tip label={t("edit.confirm")}>
+          <Button variant="default" size="sm" onClick={confirm}>
+            <Check />
+            {t("edit.confirm")}
+          </Button>
+        </Tip>
+        <Tip label={t("view.moveUp")}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => movePage(currentPage - 1, -1)}
+          >
+            <ChevronUp />
+            {t("view.moveUp")}
+          </Button>
+        </Tip>
+        <Tip label={t("view.moveDown")}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => movePage(currentPage - 1, 1)}
+          >
+            <ChevronDown />
+            {t("view.moveDown")}
           </Button>
         </Tip>
       </div>

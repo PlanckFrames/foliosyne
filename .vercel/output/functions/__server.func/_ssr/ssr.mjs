@@ -93,7 +93,7 @@ var HEADERS = { TSS_SHELL: "X-TSS_SHELL" };
 * the dev styles URL for route-scoped CSS collection.
 */
 async function getStartManifest(matchedRoutes) {
-	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-DNFxrokw.mjs");
+	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-oTn-hICc.mjs");
 	const startManifest = tsrStartManifest();
 	let routes = startManifest.routes;
 	routes[rootRouteId];
@@ -119,11 +119,11 @@ var manifest = {
 	},
 	"5c1453c38c9410f20b2343c4347b4a9f22bfc9979c4388bb9f2225ba388b7772": {
 		functionName: "readDriveFile_createServerFn_handler",
-		importer: () => import("./drive-Bg3tZPIm.mjs")
+		importer: () => import("./drive-6-M0UAPn.mjs")
 	},
 	"f1aca2be139248f5ec7cee55bc3924e7833c0f67726a4561980fcf7dbdcf4b04": {
 		functionName: "searchDriveFiles_createServerFn_handler",
-		importer: () => import("./drive-Bg3tZPIm.mjs")
+		importer: () => import("./drive-6-M0UAPn.mjs")
 	}
 };
 async function getServerFnById(id, access) {
@@ -1393,7 +1393,7 @@ var getBaseManifest = getProdBaseManifest;
 var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
 	const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-		import("./router-BOR3cACN.mjs"),
+		import("./router-vbQkA3WZ.mjs"),
 		import("./start-5Z2QO8AU.mjs"),
 		import("./empty-plugin-adapters-D9UWiqvJ.mjs")
 	]);

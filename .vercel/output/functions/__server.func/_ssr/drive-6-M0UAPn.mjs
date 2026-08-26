@@ -1,6 +1,6 @@
 import { t as createServerFn } from "./ssr.mjs";
 import { t as createServerRpc } from "./createServerRpc-A6pJPYTF.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/drive-Bg3tZPIm.js
+//#region node_modules/.nitro/vite/services/ssr/assets/drive-6-M0UAPn.js
 function pack(result) {
 	let json = null;
 	try {
@@ -22,8 +22,8 @@ var searchDriveFiles_createServerFn_handler = createServerRpc({
 	filename: "src/lib/server/drive.ts"
 }, (opts) => searchDriveFiles.__executeServer(opts));
 var searchDriveFiles = createServerFn({ method: "POST" }).validator((input) => input).handler(searchDriveFiles_createServerFn_handler, async ({ data }) => {
-	const { callTool } = await import("./client.server-CSMrkzJI.mjs");
-	const { ConnectorType, GoogleDriveTools } = await import("./app-data-uVXIDyU8.mjs");
+	const { callTool } = await import("./client.server-B1C62ED2.mjs");
+	const { ConnectorType, GoogleDriveTools } = await import("./app-data-E4J9fKCn.mjs");
 	return pack(await callTool(GoogleDriveTools.search, { query: data.query || "pdf OR docx OR document" }, { connectorType: ConnectorType.GoogleDrive }));
 });
 var readDriveFile_createServerFn_handler = createServerRpc({
@@ -32,8 +32,8 @@ var readDriveFile_createServerFn_handler = createServerRpc({
 	filename: "src/lib/server/drive.ts"
 }, (opts) => readDriveFile.__executeServer(opts));
 var readDriveFile = createServerFn({ method: "POST" }).validator((input) => input).handler(readDriveFile_createServerFn_handler, async ({ data }) => {
-	const { callTool } = await import("./client.server-CSMrkzJI.mjs");
-	const { ConnectorType, GoogleDriveTools } = await import("./app-data-uVXIDyU8.mjs");
+	const { callTool } = await import("./client.server-B1C62ED2.mjs");
+	const { ConnectorType, GoogleDriveTools } = await import("./app-data-E4J9fKCn.mjs");
 	return pack(await callTool(GoogleDriveTools.readFile, {
 		id: data.fileId,
 		fileId: data.fileId

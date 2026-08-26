@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type {
   Annotation,
   Bookmark,
+  EditGesture,
   Panel,
   SavedSignature,
   TextSelection,
@@ -13,6 +14,44 @@ import { translate } from "./i18n";
 import { uid } from "./utils";
 
 const SETTINGS_KEY = "foliosyne-settings";
+
+type DocSnapshot = {
+  annotations: Annotation[];
+  rotations: Record<number, number>;
+  pageOrder: number[];
+  bookmarks: Bookmark[];
+  userPassword: string;
+};
+
+function cloneSnap(s: {
+  annotations: Annotation[];
+  rotations: Record<number, number>;
+  pageOrder: number[];
+  bookmarks: Bookmark[];
+  userPassword: string;
+}): DocSnapshot {
+  return {
+    annotations: s.annotations.map((a) => ({ ...a })),
+    rotations: { ...s.rotations },
+    pageOrder: [...s.pageOrder],
+    bookmarks: s.bookmarks.map((b) => ({ ...b })),
+    userPassword: s.userPassword,
+  };
+}
+
+function rotateBox(
+  r: { x: number; y: number; w: number; h: number },
+  delta: number,
+) {
+  const d = ((delta % 360) + 360) % 360;
+  if (d === 90) return { x: 1 - r.y - r.h, y: r.x, w: r.h, h: r.w };
+  if (d === 180) return { x: 1 - r.x - r.w, y: 1 - r.y - r.h, w: r.w, h: r.h };
+  if (d === 270) return { x: r.y, y: 1 - r.x - r.w, w: r.h, h: r.w };
+  return r;
+}
+
+let historyLock = false;
+let historyTimer: ReturnType<typeof setTimeout> | null = null;
 
 interface Settings {
   theme: Theme;
@@ -68,6 +107,7 @@ export interface AppState {
   scale: number;
   fit: "width" | "page" | "custom";
   tool: Tool;
+  editGesture: EditGesture;
   panel: Panel;
   status: string;
   dirty: boolean;
@@ -85,6 +125,8 @@ export interface AppState {
   rightTab: "bookmarks" | "comments";
   zoomTick: number;
   printMode: boolean;
+  past: DocSnapshot[];
+  future: DocSnapshot[];
 
   setTheme: (theme: Theme) => void;
   setLang: (lang: UiLang) => void;
@@ -104,6 +146,8 @@ export interface AppState {
   setStatus: (s: string) => void;
   setScale: (n: number, fit?: AppState["fit"]) => void;
   setTool: (t: Tool) => void;
+  setEditGesture: (g: EditGesture) => void;
+  confirmEdits: () => void;
   setPanel: (p: Panel) => void;
   setCurrentPage: (n: number) => void;
   setSelection: (s: TextSelection | null) => void;
@@ -125,6 +169,9 @@ export interface AppState {
   setRightTab: (t: "bookmarks" | "comments") => void;
   markSaved: () => void;
   setPrintMode: (v: boolean) => void;
+  seedEdits: (list: Annotation[]) => void;
+  undo: () => void;
+  redo: () => void;
 }
 
 const initialDoc = {
@@ -140,6 +187,7 @@ const initialDoc = {
   scale: 1.1,
   fit: "width" as const,
   tool: "select" as Tool,
+  editGesture: "select" as EditGesture,
   panel: null as Panel,
   status: "",
   dirty: false,
@@ -157,6 +205,8 @@ const initialDoc = {
   rightTab: "bookmarks" as const,
   zoomTick: 0,
   printMode: false,
+  past: [] as DocSnapshot[],
+  future: [] as DocSnapshot[],
 };
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -215,6 +265,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       fit: "width",
       zoomTick: get().zoomTick + 1,
       printMode: false,
+      past: [],
+      future: [],
     }),
   setLoading: (loading) => set({ loading }),
   setStatus: (status) => set({ status }),
@@ -224,11 +276,45 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (cur.scale === next && cur.fit === fit) return;
     set({ scale: next, fit, zoomTick: cur.zoomTick + 1 });
   },
-  setTool: (tool) =>
+  setTool: (tool) => {
+    const cur = get();
+    let annotations = cur.annotations;
+    let activeAnnotation = cur.activeAnnotation;
+    if (cur.tool === "edit" && tool !== "edit") {
+      annotations = annotations.filter(
+        (a) => !(a.type === "edit" && !(a.text || "").trim()),
+      );
+      const active = annotations.find((a) => a.id === activeAnnotation);
+      if (active?.type === "edit") activeAnnotation = null;
+    }
     set({
       tool,
-      panel: tool === "sign" && !get().activeSignature ? "sign" : get().panel,
-    }),
+      annotations,
+      activeAnnotation: tool === cur.tool ? activeAnnotation : null,
+      editGesture: tool === "edit" ? cur.editGesture : "select",
+      panel: tool === "sign" && !cur.activeSignature ? "sign" : cur.panel,
+    });
+  },
+  setEditGesture: (editGesture) => set({ editGesture }),
+  confirmEdits: () => {
+    const s = get();
+    set({
+      past: [...s.past.slice(-79), cloneSnap(s)],
+      future: [],
+    });
+    const annotations = get()
+      .annotations.filter(
+        (a) => !(a.type === "edit" && !(a.text || "").trim()),
+      )
+      .map((a) => (a.type === "edit" ? { ...a, confirmed: true } : a));
+    set({
+      annotations,
+      activeAnnotation: null,
+      editGesture: "select",
+      tool: "select",
+      dirty: true,
+    });
+  },
   setPanel: (panel) => set({ panel }),
   setCurrentPage: (currentPage) => {
     const next = Math.max(1, Math.min(get().pageCount || 1, currentPage));
@@ -243,6 +329,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   setOpenPassword: (password) => set({ password }),
   setUserPassword: (userPassword) => set({ userPassword, dirty: true }),
   addAnnotation: (a) => {
+    if (!historyLock) {
+      set({
+        past: [...get().past.slice(-79), cloneSnap(get())],
+        future: [],
+      });
+    }
     const id = a.id ?? uid("ann");
     const next: Annotation = { ...a, id, createdAt: Date.now() };
     set({
@@ -252,17 +344,32 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
     return id;
   },
-  updateAnnotation: (id, patch) =>
+  updateAnnotation: (id, patch) => {
+    if (!historyLock) {
+      set({
+        past: [...get().past.slice(-79), cloneSnap(get())],
+        future: [],
+      });
+      historyLock = true;
+    }
+    if (historyTimer) clearTimeout(historyTimer);
+    historyTimer = setTimeout(() => {
+      historyLock = false;
+    }, 500);
     set({
       annotations: get().annotations.map((x) => (x.id === id ? { ...x, ...patch } : x)),
       dirty: true,
-    }),
-  removeAnnotation: (id) =>
+    });
+  },
+  removeAnnotation: (id) => {
     set({
+      past: [...get().past.slice(-79), cloneSnap(get())],
+      future: [],
       annotations: get().annotations.filter((x) => x.id !== id),
       activeAnnotation: get().activeAnnotation === id ? null : get().activeAnnotation,
       dirty: true,
-    }),
+    });
+  },
   setActiveAnnotation: (activeAnnotation) => set({ activeAnnotation }),
   setBookmarks: (bookmarks) => set({ bookmarks }),
   addBookmark: (b) =>
@@ -272,16 +379,48 @@ export const useAppStore = create<AppState>((set, get) => ({
   removeBookmark: (id) =>
     set({ bookmarks: get().bookmarks.filter((b) => b.id !== id) }),
   rotatePages: (originalIndices, delta) => {
-    const rotations = { ...get().rotations };
+    const s = get();
+    set({
+      past: [...s.past.slice(-79), cloneSnap(s)],
+      future: [],
+    });
+    const hit = new Set(originalIndices);
+    const rotations = { ...s.rotations };
     for (const i of originalIndices) {
       rotations[i] = (((rotations[i] ?? 0) + delta) % 360 + 360) % 360;
     }
-    set({ rotations, dirty: true, zoomTick: get().zoomTick + 1 });
+    const annotations = s.annotations.map((a) => {
+      if (!hit.has(a.pageIndex)) return a;
+      const box = rotateBox({ x: a.x, y: a.y, w: a.w, h: a.h }, delta);
+      const next = { ...a, ...box };
+      if (a.originX != null && a.originY != null) {
+        const origin = rotateBox(
+          {
+            x: a.originX,
+            y: a.originY,
+            w: a.originW ?? a.w,
+            h: a.originH ?? a.h,
+          },
+          delta,
+        );
+        next.originX = origin.x;
+        next.originY = origin.y;
+        next.originW = origin.w;
+        next.originH = origin.h;
+      }
+      return next;
+    });
+    set({ rotations, annotations, dirty: true, zoomTick: s.zoomTick + 1 });
   },
   movePage: (displayIndex, dir) => {
-    const order = [...get().pageOrder];
+    const s = get();
+    const order = [...s.pageOrder];
     const j = displayIndex + dir;
     if (j < 0 || j >= order.length) return;
+    set({
+      past: [...s.past.slice(-79), cloneSnap(s)],
+      future: [],
+    });
     const tmp = order[displayIndex]!;
     order[displayIndex] = order[j]!;
     order[j] = tmp;
@@ -292,6 +431,66 @@ export const useAppStore = create<AppState>((set, get) => ({
   setRightTab: (rightTab) => set({ rightTab }),
   markSaved: () => set({ dirty: false }),
   setPrintMode: (printMode) => set({ printMode }),
+  seedEdits: (list) => {
+    if (!list.length) return;
+    const have = new Set(
+      get()
+        .annotations.filter((a) => a.type === "edit" && a.source === "pdf")
+        .map((a) => `${a.pageIndex}:${a.y.toFixed(4)}:${a.x.toFixed(4)}`),
+    );
+    const extra = list.filter((a) => {
+      const key = `${a.pageIndex}:${a.y.toFixed(4)}:${a.x.toFixed(4)}`;
+      if (have.has(key)) return false;
+      have.add(key);
+      return true;
+    });
+    if (!extra.length) return;
+    set({ annotations: [...get().annotations, ...extra] });
+  },
+  undo: () => {
+    const s = get();
+    if (!s.past.length) return;
+    historyLock = false;
+    if (historyTimer) {
+      clearTimeout(historyTimer);
+      historyTimer = null;
+    }
+    const prev = s.past[s.past.length - 1]!;
+    set({
+      annotations: prev.annotations,
+      rotations: prev.rotations,
+      pageOrder: prev.pageOrder,
+      bookmarks: prev.bookmarks,
+      userPassword: prev.userPassword,
+      past: s.past.slice(0, -1),
+      future: [...s.future, cloneSnap(s)],
+      dirty: true,
+      activeAnnotation: null,
+      zoomTick: s.zoomTick + 1,
+    });
+  },
+  redo: () => {
+    const s = get();
+    if (!s.future.length) return;
+    historyLock = false;
+    if (historyTimer) {
+      clearTimeout(historyTimer);
+      historyTimer = null;
+    }
+    const next = s.future[s.future.length - 1]!;
+    set({
+      annotations: next.annotations,
+      rotations: next.rotations,
+      pageOrder: next.pageOrder,
+      bookmarks: next.bookmarks,
+      userPassword: next.userPassword,
+      future: s.future.slice(0, -1),
+      past: [...s.past, cloneSnap(s)],
+      dirty: true,
+      activeAnnotation: null,
+      zoomTick: s.zoomTick + 1,
+    });
+  },
 }));
 
 export function useT() {

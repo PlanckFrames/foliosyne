@@ -1,33 +1,20 @@
-import { rasterizePage } from "@/lib/pdf/engine";
+import { bakePdf } from "@/lib/pdf/mutate";
 import { useAppStore } from "./store";
 
-function ensurePrintHost(): HTMLDivElement {
-  let host = document.getElementById("folio-print") as HTMLDivElement | null;
-  if (host) host.replaceChildren();
-  else {
-    host = document.createElement("div");
-    host.id = "folio-print";
-    host.setAttribute("aria-hidden", "true");
-    document.body.appendChild(host);
-  }
-  return host;
+function bytesToBlobUrl(bytes: Uint8Array): string {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return URL.createObjectURL(new Blob([copy], { type: "application/pdf" }));
 }
 
-function waitForImages(root: HTMLElement): Promise<void> {
-  const imgs = [...root.querySelectorAll("img")];
-  return Promise.all(
-    imgs.map(
-      (img) =>
-        img.complete
-          ? Promise.resolve()
-          : new Promise<void>((resolve) => {
-              img.onload = () => resolve();
-              img.onerror = () => resolve();
-            }),
-    ),
-  ).then(() => undefined);
+function removeFrame() {
+  document.getElementById("folio-print-frame")?.remove();
 }
 
+/**
+ * Print the baked PDF itself (vector pages, exact count and size).
+ * Never print the studio HTML — that is what created blank/split sheets.
+ */
 export async function printStudio() {
   const s = useAppStore.getState();
   s.setPanel(null);
@@ -37,53 +24,70 @@ export async function printStudio() {
   }
 
   s.setStatus("Preparing print…");
-  const host = ensurePrintHost();
-  document.body.classList.add("folio-printing");
+  removeFrame();
 
   try {
-    for (const original of s.pageOrder) {
-      const redactions = s.annotations
-        .filter((a) => a.type === "redact" && a.pageIndex === original)
-        .map((a) => ({ x: a.x, y: a.y, w: a.w, h: a.h }));
-      const raster = await rasterizePage({
-        pageNumber: original + 1,
-        extraRotation: s.rotations[original] ?? 0,
-        redactions,
-        scale: 2,
-        mime: "image/jpeg",
-        quality: 0.92,
-      });
-      const img = document.createElement("img");
-      img.className = "folio-print-page";
-      img.alt = `Page ${host.childElementCount + 1}`;
-      img.width = raster.widthPx;
-      img.height = raster.heightPx;
-      img.style.width = `${raster.widthPt / 72}in`;
-      img.style.height = `${raster.heightPt / 72}in`;
-      const copy = new Uint8Array(raster.bytes);
-      const blob = new Blob([copy], { type: "image/jpeg" });
-      img.src = URL.createObjectURL(blob);
-      host.appendChild(img);
-    }
+    const baked = await bakePdf({
+      bytes: s.bytes,
+      pageOrder: s.pageOrder,
+      rotations: s.rotations,
+      annotations: s.annotations,
+      openPassword: s.password || undefined,
+    });
+    const url = bytesToBlobUrl(baked);
 
-    await waitForImages(host);
-    await new Promise<void>((r) => requestAnimationFrame(() => r()));
+    const iframe = document.createElement("iframe");
+    iframe.id = "folio-print-frame";
+    iframe.title = "Print preview";
+    iframe.setAttribute("aria-hidden", "true");
+    iframe.src = url;
+    iframe.style.cssText = [
+      "position:fixed",
+      "top:0",
+      "left:0",
+      "width:100vw",
+      "height:100vh",
+      "border:0",
+      "margin:0",
+      "padding:0",
+      "opacity:0.02",
+      "pointer-events:none",
+      "z-index:2147483646",
+      "background:#fff",
+    ].join(";");
+    document.body.appendChild(iframe);
 
+    let printed = false;
     const cleanup = () => {
-      document.body.classList.remove("folio-printing");
-      for (const img of host.querySelectorAll("img")) {
-        if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
+      removeFrame();
+      URL.revokeObjectURL(url);
+      useAppStore.getState().setStatus("");
+    };
+    const trigger = () => {
+      if (printed) return;
+      printed = true;
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } catch {
+        const w = window.open(url, "_blank");
+        w?.addEventListener("load", () => w.print());
       }
-      host.replaceChildren();
-      s.setStatus("");
     };
 
+    iframe.addEventListener("load", () => {
+      try {
+        iframe.contentWindow?.addEventListener("afterprint", cleanup, { once: true });
+      } catch {
+        /* PDF plugin may block */
+      }
+      window.setTimeout(trigger, 350);
+    });
+    window.setTimeout(trigger, 1600);
     window.addEventListener("afterprint", cleanup, { once: true });
-    window.setTimeout(cleanup, 120000);
-    window.print();
+    window.setTimeout(cleanup, 180000);
   } catch (err) {
-    document.body.classList.remove("folio-printing");
-    s.setStatus("");
+    useAppStore.getState().setStatus("");
     throw err;
   }
 }

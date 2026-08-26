@@ -1,14 +1,18 @@
 export type Tool =
   | "select"
   | "pan"
-  | "text"
+  | "edit"
   | "highlight"
   | "comment"
   | "redact"
   | "sign";
 
+/** Sub-tool while Edit PDF is active. */
+export type EditGesture = "select" | "pan" | "place";
+
 export type AnnotationType =
   | "text"
+  | "edit"
   | "highlight"
   | "comment"
   | "redact"
@@ -27,6 +31,9 @@ export type Panel =
   | "help"
   | "cloud";
 
+export type TextAlign = "left" | "center" | "right";
+export type BulletStyle = "none" | "disc" | "circle" | "square" | "dash";
+
 export interface Annotation {
   id: string;
   type: AnnotationType;
@@ -41,6 +48,26 @@ export interface Annotation {
   color?: string;
   imageDataUrl?: string;
   createdAt: number;
+  /** Comment is collapsed to a pin after confirm. */
+  confirmed?: boolean;
+  fontFamily?: string;
+  fontSize?: number;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  strike?: boolean;
+  superScript?: boolean;
+  subScript?: boolean;
+  align?: TextAlign;
+  indent?: number;
+  list?: BulletStyle;
+  /** pdf = seeded from the file; user = typed in Edit PDF. */
+  source?: "pdf" | "user";
+  /** Original PDF box, used to hide source glyphs after the overlay is moved. */
+  originX?: number;
+  originY?: number;
+  originW?: number;
+  originH?: number;
 }
 
 export interface Bookmark {

@@ -9,6 +9,7 @@ export function Viewer() {
   const scale = useAppStore((s) => s.scale);
   const fit = useAppStore((s) => s.fit);
   const tool = useAppStore((s) => s.tool);
+  const editGesture = useAppStore((s) => s.editGesture);
   const zoomTick = useAppStore((s) => s.zoomTick);
   const setScale = useAppStore((s) => s.setScale);
   const setCurrentPage = useAppStore((s) => s.setCurrentPage);
@@ -82,7 +83,8 @@ export function Viewer() {
   useEffect(() => {
     const el = scroller.current;
     if (!el) return;
-    if (tool !== "pan") {
+    const panOn = tool === "pan" || (tool === "edit" && editGesture === "pan");
+    if (!panOn) {
       el.style.cursor = "";
       el.style.touchAction = "";
       el.style.userSelect = "";
@@ -96,6 +98,8 @@ export function Viewer() {
     let lastY = 0;
     const onDown = (e: PointerEvent) => {
       if (e.button !== 0) return;
+      const hit = e.target as HTMLElement | null;
+      if (hit?.closest("[data-annot]")) return;
       dragging = true;
       lastX = e.clientX;
       lastY = e.clientY;
@@ -126,13 +130,18 @@ export function Viewer() {
       el.removeEventListener("pointerup", onUp);
       el.removeEventListener("pointercancel", onUp);
     };
-  }, [tool]);
+  }, [tool, editGesture]);
 
   return (
     <div
       ref={scroller}
       className="print-pages h-full overflow-auto px-3 py-6 md:px-8"
-      style={{ cursor: tool === "pan" ? "grab" : undefined }}
+      style={{
+        cursor:
+          tool === "pan" || (tool === "edit" && editGesture === "pan")
+            ? "grab"
+            : undefined,
+      }}
     >
       <div className="mx-auto flex flex-col gap-6 print:gap-0">
         {pageOrder.map((original, display) => (

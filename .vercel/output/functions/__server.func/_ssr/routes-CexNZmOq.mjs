@@ -2,17 +2,17 @@ import { i as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
 import { n as TSS_SERVER_FUNCTION, r as getServerFnById, t as createServerFn } from "./ssr.mjs";
-import { C as FileOutput, D as BookmarkPlus, E as ChevronDown, S as FileUp, T as ChevronUp, _ as Lock, b as Hand, c as Scan, d as Printer, f as PenLine, g as Menu, h as MessageSquare, i as Type, l as Save, m as Moon, n as ZoomOut, o as Sun, p as MousePointer2, r as X, s as Share2, t as ZoomIn, u as RotateCw, v as Languages, w as CircleHelp, x as Globe, y as Highlighter } from "../_libs/lucide-react.mjs";
+import { A as FileOutput, C as List, D as Hand, E as Highlighter, F as BookmarkPlus, I as Bold, L as AlignLeft, M as ChevronUp, N as ChevronDown, O as Globe, P as Check, R as AlignRight, S as Lock, T as Italic, _ as PenLine, a as Type, b as MessageSquare, c as Sun, d as Share2, f as Scan, g as Pencil, h as Printer, i as Underline, j as CircleHelp, k as FileUp, l as Subscript, m as RotateCw, n as ZoomOut, p as Save, r as X, s as Superscript, t as ZoomIn, u as Strikethrough, v as MousePointer2, w as Languages, x as Menu, y as Moon, z as AlignCenter } from "../_libs/lucide-react.mjs";
 import { n as toast, t as Toaster } from "../_libs/sonner.mjs";
 import { a as DialogPortal, h as Slot, i as DialogOverlay, n as DialogClose, o as DialogTitle, r as DialogContent$1, t as Dialog$1 } from "../_libs/@radix-ui/react-dialog+[...].mjs";
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
 import { a as Trigger, i as Root3, n as Portal, r as Provider, t as Content2 } from "../_libs/@radix-ui/react-tooltip+[...].mjs";
 import { i as degrees, n as StandardFonts, r as rgb, t as PDFDocument } from "../_libs/@cantoo/pdf-lib+[...].mjs";
-import { a as PageOrientation, c as TextWrappingType, i as Packer, l as VerticalPositionRelativeFrom, n as HorizontalPositionRelativeFrom, o as Paragraph, r as ImageRun, s as SectionType, t as File$1 } from "../_libs/docx.mjs";
+import { a as HorizontalPositionRelativeFrom, c as Packer, d as SectionType, f as TextRun, i as FrameWrap, l as PageOrientation, m as VerticalPositionRelativeFrom, n as File$1, o as ImageRun, p as TextWrappingType, r as FrameAnchorType, s as LineRuleType, t as AlignmentType, u as Paragraph } from "../_libs/docx.mjs";
 import { t as require_lib } from "../_libs/jszip+[...].mjs";
 import { t as create } from "../_libs/zustand.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-Z4Z8b2E1.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-CexNZmOq.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var import_lib = /* @__PURE__ */ __toESM(require_lib());
@@ -78,7 +78,7 @@ function formatBytes(n) {
 function stemFilename(name) {
 	return name.replace(/\.[^.]+$/, "") || "document";
 }
-var buttonVariants = cva("inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm text-sm font-medium transition-[opacity,transform,background-color,color,box-shadow] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:pointer-events-none disabled:opacity-40 [&_svg]:size-4 [&_svg]:shrink-0", {
+var buttonVariants = cva("inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-sm text-sm font-medium transition-[opacity,transform,background-color,color,box-shadow] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:pointer-events-none disabled:opacity-40 [&_svg]:size-4 [&_svg]:shrink-0", {
 	variants: {
 		variant: {
 			default: "bg-accent text-accent-fg hover:opacity-90 active:scale-[0.98]",
@@ -100,13 +100,14 @@ var buttonVariants = cva("inline-flex items-center justify-center gap-2 whitespa
 		size: "default"
 	}
 });
-var Button = import_react.forwardRef(({ className, variant, size, asChild, ...props }, ref) => {
+var Button = import_react.forwardRef(({ className, variant, size, asChild, type = "button", ...props }, ref) => {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(asChild ? Slot : "button", {
 		className: cn(buttonVariants({
 			variant,
 			size
 		}), className),
 		ref,
+		type: asChild ? void 0 : type,
 		...props
 	});
 });
@@ -221,18 +222,37 @@ var en = {
 	"action.add": "Add",
 	"tool.select": "Select",
 	"tool.pan": "Pan",
-	"tool.text": "Add text",
+	"tool.edit": "Edit PDF",
 	"tool.highlight": "Highlight",
 	"tool.comment": "Comment",
 	"tool.redact": "Redact",
 	"tool.sign": "Stamp signature",
 	"tool.help.select": "Select and copy text. The pointer becomes a text cursor over words.",
 	"tool.help.pan": "Drag to move the page. Scroll or use page up/down to change pages.",
-	"tool.help.text": "Click a page to place an editable text box.",
+	"tool.help.edit": "Edit the PDF in place. Change font, size, color, lists, and add text.",
 	"tool.help.highlight": "Drag over text or a region to highlight it.",
-	"tool.help.comment": "Click to drop a comment pin, then type a note.",
+	"tool.help.comment": "Click to drop a comment pin, then type a note and confirm.",
 	"tool.help.redact": "Drag a rectangle to permanently cover content on export.",
 	"tool.help.sign": "Choose or create a signature, then click the page to stamp it.",
+	"edit.addText": "Add text",
+	"edit.font": "Font",
+	"edit.size": "Size",
+	"edit.bold": "Bold",
+	"edit.italic": "Italic",
+	"edit.underline": "Underline",
+	"edit.strike": "Strikethrough",
+	"edit.super": "Superscript",
+	"edit.sub": "Subscript",
+	"edit.color": "Color",
+	"edit.indent": "Indent",
+	"edit.bullet": "Bullets",
+	"edit.bulletDisc": "Disc",
+	"edit.bulletCircle": "Circle",
+	"edit.bulletSquare": "Square",
+	"edit.bulletDash": "Dash",
+	"edit.alignLeft": "Align left",
+	"edit.alignCenter": "Align center",
+	"edit.alignRight": "Align right",
 	"view.zoomIn": "Zoom in",
 	"view.zoomOut": "Zoom out",
 	"view.fitWidth": "Fit width",
@@ -269,8 +289,8 @@ var en = {
 	"convert.toWord": "PDF to Word",
 	"convert.toGdoc": "PDF to Google Docs",
 	"convert.toPdf": "Word / Docs to PDF",
-	"convert.hintWord": "Each PDF page becomes a Word page with the original layout, type, and position — not a text dump.",
-	"convert.hintGdoc": "Downloads a layout-faithful .docx you can open in Google Docs. Page 1 of the PDF is page 1 of the file.",
+	"convert.hintWord": "Each PDF page becomes a Word page with the original paper color, headers, and artwork, plus real selectable text on top.",
+	"convert.hintGdoc": "Downloads a Word file with real text you can open in Google Docs. Page 1 of the PDF is page 1 of the file.",
 	"convert.hintPdf": "Open a .docx (including Google Docs exports) to turn it into a PDF here.",
 	"convert.working": "Converting…",
 	"convert.copied": "Layout-faithful Word file ready. Open it in Google Docs from Drive or File → Open.",
@@ -298,6 +318,7 @@ var en = {
 	"comment.placeholder": "Write a comment",
 	"comment.add": "Add comment",
 	"comment.empty": "Click the page with the comment tool to leave a note.",
+	"comment.confirm": "Confirm",
 	"redact.hint": "Drag to cover. Redactions become opaque on save and are omitted from exports.",
 	"translate.title": "Language conversion",
 	"translate.target": "Target language",
@@ -411,18 +432,37 @@ var dictionaries = {
 		"action.add": "Añadir",
 		"tool.select": "Seleccionar",
 		"tool.pan": "Mover",
-		"tool.text": "Añadir texto",
+		"tool.edit": "Editar PDF",
 		"tool.highlight": "Resaltar",
 		"tool.comment": "Comentar",
 		"tool.redact": "Censurar",
 		"tool.sign": "Sello de firma",
 		"tool.help.select": "Seleccione y copie texto. El puntero se vuelve cursor de texto sobre las palabras.",
 		"tool.help.pan": "Arrastre para mover la página. Use re Pág / av Pág para cambiar de hoja.",
-		"tool.help.text": "Haga clic en una página para colocar un cuadro de texto.",
+		"tool.help.edit": "Edite el PDF en su sitio. Cambie fuente, tamaño, color y añada texto.",
 		"tool.help.highlight": "Arrastre sobre texto o una zona para resaltarla.",
-		"tool.help.comment": "Haga clic para dejar un comentario y escriba una nota.",
+		"tool.help.comment": "Haga clic para dejar un comentario, escriba y confirme.",
 		"tool.help.redact": "Arrastre un rectángulo para cubrir el contenido al guardar.",
 		"tool.help.sign": "Cree una firma y haga clic en la página para estamparla.",
+		"edit.addText": "Añadir texto",
+		"edit.font": "Fuente",
+		"edit.size": "Tamaño",
+		"edit.bold": "Negrita",
+		"edit.italic": "Cursiva",
+		"edit.underline": "Subrayado",
+		"edit.strike": "Tachado",
+		"edit.super": "Superíndice",
+		"edit.sub": "Subíndice",
+		"edit.color": "Color",
+		"edit.indent": "Sangría",
+		"edit.bullet": "Viñetas",
+		"edit.bulletDisc": "Disco",
+		"edit.bulletCircle": "Círculo",
+		"edit.bulletSquare": "Cuadrado",
+		"edit.bulletDash": "Guion",
+		"edit.alignLeft": "Alinear a la izquierda",
+		"edit.alignCenter": "Centrar",
+		"edit.alignRight": "Alinear a la derecha",
 		"view.zoomIn": "Acercar",
 		"view.zoomOut": "Alejar",
 		"view.fitWidth": "Ajustar al ancho",
@@ -488,6 +528,7 @@ var dictionaries = {
 		"comment.placeholder": "Escriba un comentario",
 		"comment.add": "Añadir comentario",
 		"comment.empty": "Haga clic en la página con la herramienta de comentario.",
+		"comment.confirm": "Confirmar",
 		"redact.hint": "Arrastre para cubrir. Las censuras son opacas al guardar.",
 		"translate.title": "Conversión de idioma",
 		"translate.target": "Idioma de destino",
@@ -599,18 +640,37 @@ var dictionaries = {
 		"action.add": "Ajouter",
 		"tool.select": "Sélection",
 		"tool.pan": "Déplacer",
-		"tool.text": "Ajouter du texte",
+		"tool.edit": "Modifier le PDF",
 		"tool.highlight": "Surligner",
 		"tool.comment": "Commenter",
 		"tool.redact": "Caviarder",
 		"tool.sign": "Tampon de signature",
 		"tool.help.select": "Sélectionnez et copiez le texte. Le curseur devient un I-beam au-dessus des mots.",
 		"tool.help.pan": "Faites glisser pour déplacer la page. Page préc. / suiv. pour changer de feuille.",
-		"tool.help.text": "Cliquez une page pour poser un bloc de texte.",
+		"tool.help.edit": "Modifiez le PDF sur place. Police, taille, couleur, listes et ajout de texte.",
 		"tool.help.highlight": "Faites glisser sur du texte ou une zone pour surligner.",
-		"tool.help.comment": "Cliquez pour poser une note, puis saisissez le commentaire.",
+		"tool.help.comment": "Cliquez pour poser une note, saisissez, puis confirmez.",
 		"tool.help.redact": "Tracez un rectangle : le contenu sera masqué à l’enregistrement.",
 		"tool.help.sign": "Créez une signature puis cliquez la page pour la poser.",
+		"edit.addText": "Ajouter du texte",
+		"edit.font": "Police",
+		"edit.size": "Taille",
+		"edit.bold": "Gras",
+		"edit.italic": "Italique",
+		"edit.underline": "Souligné",
+		"edit.strike": "Barré",
+		"edit.super": "Exposant",
+		"edit.sub": "Indice",
+		"edit.color": "Couleur",
+		"edit.indent": "Retrait",
+		"edit.bullet": "Puces",
+		"edit.bulletDisc": "Disque",
+		"edit.bulletCircle": "Cercle",
+		"edit.bulletSquare": "Carré",
+		"edit.bulletDash": "Tiret",
+		"edit.alignLeft": "Aligner à gauche",
+		"edit.alignCenter": "Centrer",
+		"edit.alignRight": "Aligner à droite",
 		"view.zoomIn": "Zoom avant",
 		"view.zoomOut": "Zoom arrière",
 		"view.fitWidth": "Ajuster à la largeur",
@@ -676,6 +736,7 @@ var dictionaries = {
 		"comment.placeholder": "Écrire un commentaire",
 		"comment.add": "Ajouter",
 		"comment.empty": "Cliquez la page avec l’outil commentaire.",
+		"comment.confirm": "Confirmer",
 		"redact.hint": "Faites glisser pour couvrir. Les caviardages sont opaques à l’enregistrement.",
 		"translate.title": "Conversion de langue",
 		"translate.target": "Langue cible",
@@ -803,7 +864,7 @@ overlay("de", {
 	"action.add": "Hinzufügen",
 	"tool.select": "Auswählen",
 	"tool.pan": "Verschieben",
-	"tool.text": "Text hinzufügen",
+	"tool.edit": "PDF bearbeiten",
 	"tool.highlight": "Markieren",
 	"tool.comment": "Kommentieren",
 	"tool.redact": "Schwärzen",
@@ -894,7 +955,7 @@ overlay("ja", {
 	"status.loading": "読み込み中…",
 	"tool.select": "選択",
 	"tool.pan": "移動",
-	"tool.text": "テキスト追加",
+	"tool.edit": "PDFを編集",
 	"tool.highlight": "ハイライト",
 	"tool.comment": "コメント",
 	"tool.redact": "墨消し",
@@ -926,7 +987,7 @@ overlay("zh", {
 	"status.loading": "正在打开文档…",
 	"tool.select": "选择",
 	"tool.pan": "平移",
-	"tool.text": "添加文本",
+	"tool.edit": "编辑 PDF",
 	"tool.highlight": "高亮",
 	"tool.comment": "批注",
 	"tool.redact": "密文",
@@ -1093,8 +1154,14 @@ var metricsCache = /* @__PURE__ */ new Map();
 async function loadPdfjs() {
 	if (pdfjs) return pdfjs;
 	const mod = await import("../_libs/pdfjs-dist.mjs").then((n) => n.t);
-	const worker = await import("./pdf.worker.min-C4v1Kq3M.mjs");
-	mod.GlobalWorkerOptions.workerSrc = worker.default;
+	try {
+		const WorkerCtor = (await import("./pdf.worker.min-D8mGC_hv.mjs")).default;
+		const port = new WorkerCtor();
+		mod.GlobalWorkerOptions.workerPort = port;
+	} catch {
+		const worker = await import("./pdf.worker.min-C4v1Kq3M.mjs");
+		mod.GlobalWorkerOptions.workerSrc = worker.default;
+	}
 	pdfjs = mod;
 	return mod;
 }
@@ -1112,13 +1179,16 @@ async function openPdfBytes(bytes, password) {
 	const data = new Uint8Array(bytes.byteLength);
 	data.set(bytes);
 	try {
-		const pdf = await lib.getDocument({
+		const task = lib.getDocument({
 			data,
 			password: password || void 0,
 			cMapUrl: `https://unpkg.com/pdfjs-dist@${lib.version}/cmaps/`,
 			cMapPacked: true,
 			standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${lib.version}/standard_fonts/`
-		}).promise;
+		});
+		const pdf = await Promise.race([task.promise, new Promise((_, reject) => {
+			globalThis.setTimeout(() => reject(/* @__PURE__ */ new Error("Timed out opening this PDF.")), 2e4);
+		})]);
 		current = pdf;
 		return {
 			ok: true,
@@ -1164,22 +1234,89 @@ async function getPageMetrics(pageNumber, extraRotation = 0) {
 	metricsCache.set(key, m);
 	return m;
 }
-async function extractPageText(pageNumber) {
-	const content = await (await getPage(pageNumber)).getTextContent();
-	const lines = [];
-	let lastY = null;
-	let buf = "";
-	for (const item of content.items) {
-		if (!("str" in item)) continue;
-		const y = Number(item.transform[5] ?? 0);
-		if (lastY !== null && Math.abs(y - lastY) > 4) {
-			if (buf.trim()) lines.push(buf.trim());
-			buf = item.str;
-		} else buf += item.str;
-		lastY = y;
+async function extractPageLayout(pageNumber, extraRotation = 0) {
+	const page = await getPage(pageNumber);
+	const rot = ((page.rotate + extraRotation) % 360 + 360) % 360;
+	const viewport = page.getViewport({
+		scale: 1,
+		rotation: rot
+	});
+	const content = await page.getTextContent();
+	const spans = [];
+	const fontStyles = content.styles ?? {};
+	for (const raw of content.items) {
+		if (!raw || typeof raw !== "object" || !("str" in raw)) continue;
+		const item = raw;
+		const text = item.str;
+		if (!text) continue;
+		const tx = item.transform ?? [
+			1,
+			0,
+			0,
+			1,
+			0,
+			0
+		];
+		const x0 = tx[4] ?? 0;
+		const y0 = tx[5] ?? 0;
+		const w0 = item.width ?? 0;
+		const h0 = item.height ?? Math.hypot(tx[0] ?? 0, tx[1] ?? 0);
+		const p1 = viewport.convertToViewportPoint(x0, y0);
+		const p2 = viewport.convertToViewportPoint(x0 + w0, y0 + h0);
+		const x = Math.min(p1[0], p2[0]);
+		const y = Math.min(p1[1], p2[1]);
+		const w = Math.max(1, Math.abs(p2[0] - p1[0]));
+		const h = Math.max(1, Math.abs(p2[1] - p1[1]));
+		const fontSize = Math.max(h, Math.hypot(tx[0] ?? 0, tx[1] ?? 0));
+		const fontName = item.fontName || "";
+		const family = fontStyles[fontName]?.fontFamily || fontName;
+		spans.push({
+			text,
+			x,
+			y,
+			w,
+			h,
+			fontSize,
+			fontName: family || fontName,
+			bold: /bold|black|heavy|semibold/i.test(`${family} ${fontName}`),
+			italic: /italic|oblique/i.test(`${family} ${fontName}`)
+		});
 	}
-	if (buf.trim()) lines.push(buf.trim());
-	return lines.join("\n");
+	spans.sort((a, b) => a.y === b.y ? a.x - b.x : a.y - b.y);
+	const lines = [];
+	for (const span of spans) {
+		const last = lines[lines.length - 1];
+		if (last && Math.abs(span.y - last.y) <= Math.max(span.fontSize, last.fontSize) * .45 && last) {
+			const gap = span.x - (last.x + last.w);
+			const joiner = gap > span.fontSize * .35 ? " " : gap > 1.5 ? " " : "";
+			last.text += joiner + span.text;
+			last.w = Math.max(last.w, span.x + span.w - last.x);
+			last.h = Math.max(last.h, span.h);
+			last.fontSize = Math.max(last.fontSize, span.fontSize);
+			last.bold = last.bold || span.bold;
+			last.italic = last.italic || span.italic;
+			last.spans.push(span);
+		} else lines.push({
+			text: span.text,
+			x: span.x,
+			y: span.y,
+			w: span.w,
+			h: span.h,
+			fontSize: span.fontSize,
+			fontName: span.fontName,
+			bold: span.bold,
+			italic: span.italic,
+			spans: [span]
+		});
+	}
+	return {
+		widthPt: viewport.width,
+		heightPt: viewport.height,
+		lines
+	};
+}
+async function extractPageText(pageNumber) {
+	return (await extractPageLayout(pageNumber)).lines.map((l) => l.text).join("\n");
 }
 async function extractDocumentText(pageCount, onPage) {
 	const parts = [];
@@ -1190,7 +1327,7 @@ async function extractDocumentText(pageCount, onPage) {
 	}
 	return parts.join("\n\n");
 }
-function isTextRun(it) {
+function isHeadingRun(it) {
 	return typeof it === "object" && it !== null && "str" in it && typeof it.str === "string";
 }
 async function detectHeadings(pageCount, pageOrder) {
@@ -1200,7 +1337,7 @@ async function detectHeadings(pageCount, pageOrder) {
 		const original = pageOrder[display];
 		const content = await (await getPage(original + 1)).getTextContent();
 		const items = [];
-		for (const it of content.items) if (isTextRun(it)) items.push(it);
+		for (const it of content.items) if (isHeadingRun(it)) items.push(it);
 		if (!items.length) continue;
 		const heights = items.map((it) => it.height).filter((h) => h > 0);
 		heights.sort((a, b) => a - b);
@@ -1313,6 +1450,156 @@ async function rasterizePage(opts) {
 		heightPt: base.height
 	};
 }
+function rgbHex(r, g, b) {
+	const h = (n) => Math.max(0, Math.min(255, n)).toString(16).padStart(2, "0");
+	return `${h(r)}${h(g)}${h(b)}`.toUpperCase();
+}
+function isPaperish(r, g, b) {
+	return r > 220 && g > 210 && b > 200 && Math.abs(r - g) < 30 && Math.abs(g - b) < 30;
+}
+/** Full-page JPEG with glyphs knocked out so Word can overlay real text. */
+async function rasterizePageBackdrop(opts) {
+	const page = await getPage(opts.pageNumber);
+	const extra = opts.extraRotation ?? 0;
+	const rot = ((page.rotate + extra) % 360 + 360) % 360;
+	const scale = 2;
+	const viewport = page.getViewport({
+		scale,
+		rotation: rot
+	});
+	const canvas = document.createElement("canvas");
+	canvas.width = Math.max(1, Math.floor(viewport.width));
+	canvas.height = Math.max(1, Math.floor(viewport.height));
+	const ctx = canvas.getContext("2d", { alpha: false });
+	if (!ctx) throw new Error("Could not rasterize page");
+	ctx.fillStyle = "#ffffff";
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+	await page.render({
+		canvasContext: ctx,
+		viewport,
+		canvas
+	}).promise;
+	const w = canvas.width;
+	const h = canvas.height;
+	const sample = (x, y) => {
+		const px = ctx.getImageData(Math.max(0, Math.min(w - 1, Math.round(x))), Math.max(0, Math.min(h - 1, Math.round(y))), 1, 1).data;
+		return {
+			r: px[0],
+			g: px[1],
+			b: px[2]
+		};
+	};
+	const corners = [
+		sample(8, 8),
+		sample(w - 8, 8),
+		sample(8, h - 8),
+		sample(w - 8, h - 8),
+		sample(w / 2, h / 2)
+	];
+	const paper = corners.find((c) => isPaperish(c.r, c.g, c.b)) ?? corners[0];
+	const paperCss = `rgb(${paper.r},${paper.g},${paper.b})`;
+	const colored = opts.lines.map((line) => {
+		const sx = (line.x + Math.min(6, line.w * .15)) * scale;
+		const sy = (line.y + line.h * .55) * scale;
+		let best = sample(sx, sy);
+		if (isPaperish(best.r, best.g, best.b)) best = sample(sx + 4, sy);
+		if (isPaperish(best.r, best.g, best.b)) best = {
+			r: 28,
+			g: 25,
+			b: 23
+		};
+		return {
+			...line,
+			color: rgbHex(best.r, best.g, best.b)
+		};
+	});
+	ctx.fillStyle = paperCss;
+	for (const line of opts.lines) {
+		const pad = Math.max(2, line.fontSize * .12) * scale;
+		ctx.fillRect(line.x * scale - pad, line.y * scale - pad * .4, line.w * scale + pad * 2, line.h * scale + pad * 1.1);
+	}
+	if (opts.redactions?.length) {
+		ctx.fillStyle = "#000000";
+		for (const r of opts.redactions) ctx.fillRect(r.x * w - 2, r.y * h - 2, r.w * w + 4, r.h * h + 4);
+	}
+	const blob = await new Promise((resolve, reject) => {
+		canvas.toBlob((b) => b ? resolve(b) : reject(/* @__PURE__ */ new Error("Rasterize failed")), "image/jpeg", .9);
+	});
+	const bytes = new Uint8Array(await blob.arrayBuffer());
+	const base = page.getViewport({
+		scale: 1,
+		rotation: rot
+	});
+	return {
+		bytes,
+		widthPt: base.width,
+		heightPt: base.height,
+		lines: colored
+	};
+}
+async function paintTextOnRaster(raster, overlays) {
+	const blob = new Blob([new Uint8Array(raster.bytes)], { type: "image/png" });
+	const bmp = await createImageBitmap(blob);
+	const canvas = document.createElement("canvas");
+	canvas.width = raster.widthPx;
+	canvas.height = raster.heightPx;
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return raster.bytes;
+	ctx.drawImage(bmp, 0, 0);
+	bmp.close();
+	const W = canvas.width;
+	const H = canvas.height;
+	const pt = W / raster.widthPt;
+	for (const o of overlays) {
+		const x = o.x * W;
+		const y = o.y * H;
+		const w = Math.max(8, o.w * W);
+		const h = Math.max(8, o.h * H);
+		if (o.knockout) {
+			ctx.fillStyle = "#F4EEE6";
+			ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+		}
+		const sizePx = Math.max(8, (o.fontSize ?? 12) * pt);
+		const weight = o.bold ? "700" : "400";
+		ctx.font = `${o.italic ? "italic" : "normal"} ${weight} ${sizePx}px ${o.fontFamily || "Times New Roman"}`;
+		ctx.fillStyle = o.color?.startsWith("#") ? o.color : `#${o.color || "1C1917"}`;
+		ctx.textBaseline = "top";
+		ctx.textAlign = o.align === "center" ? "center" : o.align === "right" ? "right" : "left";
+		const tx = o.align === "center" ? x + w / 2 : o.align === "right" ? x + w : x + 1;
+		const lines = (o.text || "").split("\n");
+		let ty = y + 1;
+		for (const line of lines) {
+			ctx.fillText(line, tx, ty, w);
+			if (o.underline || o.strike) {
+				const tw = Math.min(w, ctx.measureText(line).width);
+				const x0 = o.align === "center" ? tx - tw / 2 : o.align === "right" ? tx - tw : tx;
+				ctx.strokeStyle = ctx.fillStyle;
+				ctx.lineWidth = Math.max(1, sizePx * .06);
+				ctx.beginPath();
+				if (o.underline) {
+					ctx.moveTo(x0, ty + sizePx * .95);
+					ctx.lineTo(x0 + tw, ty + sizePx * .95);
+				}
+				if (o.strike) {
+					ctx.moveTo(x0, ty + sizePx * .5);
+					ctx.lineTo(x0 + tw, ty + sizePx * .5);
+				}
+				ctx.stroke();
+			}
+			ty += sizePx * 1.2;
+		}
+	}
+	const out = await new Promise((resolve, reject) => {
+		canvas.toBlob((b) => b ? resolve(b) : reject(/* @__PURE__ */ new Error("Paint failed")), "image/png");
+	});
+	return new Uint8Array(await out.arrayBuffer());
+}
+function rectsOverlap(a, b) {
+	return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+function annotationCovers(annotations, pageIndex, box) {
+	return annotations.some((a) => a.type === "redact" && a.pageIndex === pageIndex && rectsOverlap(a, box));
+}
 async function parseDocx(buffer) {
 	const xml = await (await import_lib.default.loadAsync(buffer)).file("word/document.xml")?.async("string");
 	if (!xml) throw new Error("Not a Word document");
@@ -1390,10 +1677,27 @@ async function blocksToPdf(blocks, title) {
 	return doc.save();
 }
 function ptToTwip(pt) {
-	return Math.max(1, Math.round(pt * 20));
+	return Math.max(0, Math.round(pt * 20));
 }
 function ptToPx(pt) {
 	return Math.max(1, Math.round(pt * 96 / 72));
+}
+function mapFont$1(name) {
+	const n = name.toLowerCase();
+	if (/courier|mono/.test(n)) return "Courier New";
+	if (/helvetica|arial|sans|outfit|ui/.test(n)) return "Arial";
+	return "Times New Roman";
+}
+function lineCovered(annotations, pageIndex, line, pageW, pageH) {
+	return annotationCovers(annotations, pageIndex, {
+		x: line.x / pageW,
+		y: line.y / pageH,
+		w: Math.max(line.w, 1) / pageW,
+		h: Math.max(line.h, 1) / pageH
+	});
+}
+function halfPoints(pt) {
+	return Math.max(14, Math.min(96, Math.round(pt * 2)));
 }
 async function pdfPagesToDocx(opts) {
 	const rotations = opts.rotations ?? {};
@@ -1402,28 +1706,125 @@ async function pdfPagesToDocx(opts) {
 	for (let i = 0; i < opts.pageOrder.length; i++) {
 		const original = opts.pageOrder[i];
 		const extra = rotations[original] ?? 0;
+		const layout = await extractPageLayout(original + 1, extra);
+		const pageW = layout.widthPt;
+		const pageH = layout.heightPt;
+		const landscape = pageW > pageH;
 		const redactions = annotations.filter((a) => a.type === "redact" && a.pageIndex === original).map((a) => ({
 			x: a.x,
 			y: a.y,
 			w: a.w,
 			h: a.h
 		}));
-		const raster = await rasterizePage({
+		const backdrop = await rasterizePageBackdrop({
 			pageNumber: original + 1,
 			extraRotation: extra,
-			redactions,
-			scale: 2,
-			mime: "image/jpeg",
-			quality: .88
+			lines: layout.lines,
+			redactions
 		});
-		const landscape = raster.widthPt > raster.heightPt;
+		const visible = backdrop.lines.filter((line) => line.text.trim() && !lineCovered(annotations, original, line, pageW, pageH));
+		const bg = new Paragraph({
+			spacing: {
+				before: 0,
+				after: 0,
+				line: 20,
+				lineRule: LineRuleType.EXACT
+			},
+			children: [new ImageRun({
+				type: "jpg",
+				data: backdrop.bytes,
+				transformation: {
+					width: ptToPx(pageW),
+					height: ptToPx(pageH)
+				},
+				floating: {
+					horizontalPosition: {
+						relative: HorizontalPositionRelativeFrom.PAGE,
+						offset: 0
+					},
+					verticalPosition: {
+						relative: VerticalPositionRelativeFrom.PAGE,
+						offset: 0
+					},
+					wrap: { type: TextWrappingType.NONE },
+					behindDocument: true,
+					allowOverlap: true
+				}
+			})]
+		});
+		const framed = visible.map((line) => {
+			const trimmed = line.text.replace(/\s+/g, " ");
+			const size = halfPoints(line.fontSize);
+			return new Paragraph({
+				frame: {
+					type: "absolute",
+					position: {
+						x: ptToTwip(Math.max(0, line.x)),
+						y: ptToTwip(Math.max(0, line.y))
+					},
+					width: ptToTwip(Math.max(line.w + 8, 24)),
+					height: ptToTwip(Math.max(line.h + 2, line.fontSize + 2)),
+					wrap: FrameWrap.NONE,
+					anchor: {
+						horizontal: FrameAnchorType.PAGE,
+						vertical: FrameAnchorType.PAGE
+					}
+				},
+				spacing: {
+					before: 0,
+					after: 0,
+					line: Math.round(Math.max(line.fontSize, 8) * 20),
+					lineRule: LineRuleType.EXACT
+				},
+				alignment: AlignmentType.START,
+				children: [new TextRun({
+					text: trimmed,
+					bold: line.bold,
+					italics: line.italic,
+					size,
+					font: mapFont$1(line.fontName),
+					color: line.color || "1C1917"
+				})]
+			});
+		});
+		for (const a of annotations) {
+			if (a.pageIndex !== original) continue;
+			if ((a.type === "text" || a.type === "edit") && a.text?.trim()) framed.push(new Paragraph({
+				frame: {
+					type: "absolute",
+					position: {
+						x: ptToTwip(a.x * pageW),
+						y: ptToTwip(a.y * pageH)
+					},
+					width: ptToTwip(Math.max(a.w * pageW, 48)),
+					height: ptToTwip(Math.max(a.h * pageH, 16)),
+					wrap: FrameWrap.NONE,
+					anchor: {
+						horizontal: FrameAnchorType.PAGE,
+						vertical: FrameAnchorType.PAGE
+					}
+				},
+				children: [new TextRun({
+					text: a.text.trim(),
+					size: halfPoints(a.fontSize ?? 12),
+					font: a.fontFamily || "Times New Roman",
+					bold: a.bold,
+					italics: a.italic,
+					underline: a.underline ? { type: "single" } : void 0,
+					strike: a.strike,
+					superScript: a.superScript,
+					subScript: a.subScript,
+					color: (a.color || "#1C1917").replace("#", "")
+				})]
+			}));
+		}
 		sections.push({
 			properties: {
 				type: SectionType.NEXT_PAGE,
 				page: {
 					size: {
-						width: ptToTwip(raster.widthPt),
-						height: ptToTwip(raster.heightPt),
+						width: ptToTwip(pageW),
+						height: ptToTwip(pageH),
 						orientation: landscape ? PageOrientation.LANDSCAPE : PageOrientation.PORTRAIT
 					},
 					margin: {
@@ -1436,518 +1837,16 @@ async function pdfPagesToDocx(opts) {
 					}
 				}
 			},
-			children: [new Paragraph({
-				spacing: {
-					after: 0,
-					before: 0
-				},
-				children: [new ImageRun({
-					type: "jpg",
-					data: raster.bytes,
-					transformation: {
-						width: ptToPx(raster.widthPt),
-						height: ptToPx(raster.heightPt)
-					},
-					floating: {
-						horizontalPosition: {
-							relative: HorizontalPositionRelativeFrom.PAGE,
-							offset: 0
-						},
-						verticalPosition: {
-							relative: VerticalPositionRelativeFrom.PAGE,
-							offset: 0
-						},
-						wrap: { type: TextWrappingType.NONE },
-						behindDocument: false,
-						allowOverlap: true
-					},
-					altText: {
-						title: `Page ${i + 1}`,
-						description: opts.title,
-						name: `page-${i + 1}`
-					}
-				})]
-			})]
+			children: [bg, ...framed]
 		});
 	}
 	const doc = new File$1({
 		title: opts.title,
+		creator: "Foliosyne",
+		description: "Word conversion with page artwork and real editable text.",
 		sections
 	});
 	return Packer.toBlob(doc);
-}
-var SETTINGS_KEY = "foliosyne-settings";
-function loadSettings() {
-	return {
-		theme: "light",
-		lang: "en",
-		homePrinter: "Home printer",
-		workPrinter: "Work printer",
-		signatures: []
-	};
-}
-function persist(s) {
-	try {
-		localStorage.setItem(SETTINGS_KEY, JSON.stringify({
-			theme: s.theme,
-			lang: s.lang,
-			homePrinter: s.homePrinter,
-			workPrinter: s.workPrinter,
-			signatures: s.signatures
-		}));
-	} catch {}
-}
-var initialDoc = {
-	name: "",
-	kind: null,
-	bytes: null,
-	pageCount: 0,
-	pageOrder: [],
-	rotations: {},
-	annotations: [],
-	bookmarks: [],
-	currentPage: 1,
-	scale: 1.1,
-	fit: "width",
-	tool: "select",
-	panel: null,
-	status: "",
-	dirty: false,
-	loading: false,
-	password: "",
-	pendingPassword: false,
-	pendingBytes: null,
-	pendingName: "",
-	userPassword: "",
-	selection: null,
-	activeAnnotation: null,
-	activeSignature: null,
-	draftComment: "",
-	leftOpen: true,
-	rightTab: "bookmarks",
-	zoomTick: 0,
-	printMode: false
-};
-var useAppStore = create((set, get) => ({
-	...loadSettings(),
-	...initialDoc,
-	setTheme: (theme) => {
-		set({ theme });
-		persist(get());
-	},
-	setLang: (lang) => {
-		set({ lang });
-		persist(get());
-	},
-	setPrinters: (homePrinter, workPrinter) => {
-		set({
-			homePrinter,
-			workPrinter
-		});
-		persist(get());
-	},
-	addSignature: (sig) => {
-		set({
-			signatures: [...get().signatures, sig],
-			activeSignature: sig
-		});
-		persist(get());
-	},
-	removeSignature: (id) => {
-		set({
-			signatures: get().signatures.filter((s) => s.id !== id),
-			activeSignature: get().activeSignature?.id === id ? null : get().activeSignature
-		});
-		persist(get());
-	},
-	setActiveSignature: (sig) => set({
-		activeSignature: sig,
-		tool: sig ? "sign" : get().tool
-	}),
-	resetDocument: () => set({
-		...initialDoc,
-		status: get().status
-	}),
-	setDocument: ({ name, kind, bytes, pageCount }) => set({
-		name,
-		kind,
-		bytes,
-		pageCount,
-		pageOrder: Array.from({ length: pageCount }, (_, i) => i),
-		rotations: {},
-		annotations: [],
-		bookmarks: [],
-		currentPage: 1,
-		dirty: false,
-		loading: false,
-		pendingPassword: false,
-		pendingBytes: null,
-		pendingName: "",
-		userPassword: "",
-		selection: null,
-		activeAnnotation: null,
-		panel: null,
-		scale: 1.1,
-		fit: "width",
-		zoomTick: get().zoomTick + 1,
-		printMode: false
-	}),
-	setLoading: (loading) => set({ loading }),
-	setStatus: (status) => set({ status }),
-	setScale: (scale, fit = "custom") => {
-		const next = Math.max(.25, Math.min(4, scale));
-		const cur = get();
-		if (cur.scale === next && cur.fit === fit) return;
-		set({
-			scale: next,
-			fit,
-			zoomTick: cur.zoomTick + 1
-		});
-	},
-	setTool: (tool) => set({
-		tool,
-		panel: tool === "sign" && !get().activeSignature ? "sign" : get().panel
-	}),
-	setPanel: (panel) => set({ panel }),
-	setCurrentPage: (currentPage) => {
-		const next = Math.max(1, Math.min(get().pageCount || 1, currentPage));
-		if (get().currentPage === next) return;
-		set({ currentPage: next });
-	},
-	setSelection: (selection) => set({ selection }),
-	setPasswordGate: (pendingBytes, pendingName) => set({
-		pendingPassword: true,
-		pendingBytes,
-		pendingName,
-		panel: "password"
-	}),
-	clearPasswordGate: () => set({
-		pendingPassword: false,
-		pendingBytes: null,
-		pendingName: "",
-		panel: null
-	}),
-	setOpenPassword: (password) => set({ password }),
-	setUserPassword: (userPassword) => set({
-		userPassword,
-		dirty: true
-	}),
-	addAnnotation: (a) => {
-		const id = a.id ?? uid("ann");
-		const next = {
-			...a,
-			id,
-			createdAt: Date.now()
-		};
-		set({
-			annotations: [...get().annotations, next],
-			dirty: true,
-			activeAnnotation: id
-		});
-		return id;
-	},
-	updateAnnotation: (id, patch) => set({
-		annotations: get().annotations.map((x) => x.id === id ? {
-			...x,
-			...patch
-		} : x),
-		dirty: true
-	}),
-	removeAnnotation: (id) => set({
-		annotations: get().annotations.filter((x) => x.id !== id),
-		activeAnnotation: get().activeAnnotation === id ? null : get().activeAnnotation,
-		dirty: true
-	}),
-	setActiveAnnotation: (activeAnnotation) => set({ activeAnnotation }),
-	setBookmarks: (bookmarks) => set({ bookmarks }),
-	addBookmark: (b) => set({ bookmarks: [...get().bookmarks, {
-		...b,
-		id: b.id ?? uid("bm")
-	}] }),
-	removeBookmark: (id) => set({ bookmarks: get().bookmarks.filter((b) => b.id !== id) }),
-	rotatePages: (originalIndices, delta) => {
-		const rotations = { ...get().rotations };
-		for (const i of originalIndices) rotations[i] = (((rotations[i] ?? 0) + delta) % 360 + 360) % 360;
-		set({
-			rotations,
-			dirty: true,
-			zoomTick: get().zoomTick + 1
-		});
-	},
-	movePage: (displayIndex, dir) => {
-		const order = [...get().pageOrder];
-		const j = displayIndex + dir;
-		if (j < 0 || j >= order.length) return;
-		const tmp = order[displayIndex];
-		order[displayIndex] = order[j];
-		order[j] = tmp;
-		set({
-			pageOrder: order,
-			dirty: true,
-			currentPage: j + 1
-		});
-	},
-	setDraftComment: (draftComment) => set({ draftComment }),
-	setLeftOpen: (leftOpen) => set({ leftOpen }),
-	setRightTab: (rightTab) => set({ rightTab }),
-	markSaved: () => set({ dirty: false }),
-	setPrintMode: (printMode) => set({ printMode })
-}));
-function useT() {
-	const lang = useAppStore((s) => s.lang);
-	return (key, params) => translate(lang, key, params);
-}
-async function ingestPdf(bytes, name, password) {
-	const store = useAppStore.getState();
-	store.setLoading(true);
-	store.setStatus(store.lang === "en" ? "Opening document…" : "");
-	const result = await openPdfBytes(bytes, password);
-	if (!result.ok && result.needPassword) {
-		store.setLoading(false);
-		store.setPasswordGate(bytes, name);
-		return;
-	}
-	if (!result.ok) {
-		store.setLoading(false);
-		toast.error(result.message || "Could not open that file.");
-		return;
-	}
-	store.setDocument({
-		name,
-		kind: "pdf",
-		bytes,
-		pageCount: result.pageCount
-	});
-	store.setOpenPassword(password || "");
-	try {
-		const outlined = await outlineBookmarks();
-		if (outlined.length) store.setBookmarks(outlined);
-		else {
-			const auto = await detectHeadings(result.pageCount, Array.from({ length: result.pageCount }, (_, i) => i));
-			store.setBookmarks(auto);
-		}
-	} catch {}
-	try {
-		await putFile({
-			id: uid("file"),
-			name,
-			kind: "pdf",
-			bytes: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
-			savedAt: Date.now()
-		});
-	} catch {}
-	store.setLoading(false);
-	store.setStatus("");
-}
-async function ingestDocx(buffer, name) {
-	const store = useAppStore.getState();
-	store.setLoading(true);
-	try {
-		await ingestPdf(await blocksToPdf(await parseDocx(buffer), name), name.replace(/\.docx?$/i, "") + ".pdf");
-	} catch (err) {
-		store.setLoading(false);
-		toast.error(err instanceof Error ? err.message : "Not a Word document");
-	}
-}
-async function ingestFile(file) {
-	const name = file.name || "document";
-	const buf = await file.arrayBuffer();
-	const bytes = new Uint8Array(buf);
-	const lower = name.toLowerCase();
-	if (lower.endsWith(".docx") || lower.endsWith(".doc")) {
-		await ingestDocx(buf, name);
-		return;
-	}
-	await ingestPdf(bytes, name.endsWith(".pdf") ? name : `${name}.pdf`);
-}
-function pdfBox(page, a) {
-	const { width, height } = page.getSize();
-	return {
-		x: a.x * width,
-		y: height - (a.y + a.h) * height,
-		w: a.w * width,
-		h: a.h * height
-	};
-}
-function wrapFont(font, text, size, max) {
-	const words = text.split(/\s+/);
-	const lines = [];
-	let cur = "";
-	for (const w of words) {
-		const next = cur ? `${cur} ${w}` : w;
-		if (font.widthOfTextAtSize(next, size) > max && cur) {
-			lines.push(cur);
-			cur = w;
-		} else cur = next;
-	}
-	if (cur) lines.push(cur);
-	return lines;
-}
-async function drawMarks(page, list, out, helv, helvBold, skipRedact) {
-	for (const a of list) {
-		const box = pdfBox(page, a);
-		if (a.type === "redact") {
-			if (skipRedact) continue;
-			page.drawRectangle({
-				x: box.x,
-				y: box.y,
-				width: box.w,
-				height: box.h,
-				color: rgb(0, 0, 0)
-			});
-		} else if (a.type === "highlight") page.drawRectangle({
-			x: box.x,
-			y: box.y,
-			width: box.w,
-			height: box.h,
-			color: rgb(.91, .79, .41),
-			opacity: .38
-		});
-		else if (a.type === "text" && a.text) {
-			const size = Math.max(8, Math.min(18, box.h * .7));
-			const lines = wrapFont(helv, a.text, size, Math.max(20, box.w - 4));
-			let y = box.y + box.h - size - 2;
-			for (const line of lines) {
-				page.drawText(line, {
-					x: box.x + 2,
-					y,
-					size,
-					font: helv,
-					color: rgb(.11, .1, .09),
-					maxWidth: box.w - 4
-				});
-				y -= size + 2;
-			}
-		} else if (a.type === "comment") {
-			page.drawRectangle({
-				x: box.x,
-				y: box.y,
-				width: 14,
-				height: 14,
-				color: rgb(.95, .89, .63),
-				borderColor: rgb(.55, .45, .2),
-				borderWidth: .6
-			});
-			if (a.text) {
-				const lines = wrapFont(helv, a.text, 8, 160);
-				let y = box.y + 16;
-				for (const line of lines.slice(0, 8)) {
-					page.drawText(line, {
-						x: box.x + 18,
-						y,
-						size: 8,
-						font: helv,
-						color: rgb(.25, .2, .12)
-					});
-					y -= 10;
-				}
-			}
-		} else if (a.type === "signature" && a.imageDataUrl) try {
-			const bytes = dataUrlToBytes(a.imageDataUrl);
-			const img = a.imageDataUrl.startsWith("data:image/jpeg") ? await out.embedJpg(bytes) : await out.embedPng(bytes);
-			page.drawImage(img, {
-				x: box.x,
-				y: box.y,
-				width: box.w,
-				height: box.h
-			});
-		} catch {
-			page.drawText(a.text || "Signature", {
-				x: box.x,
-				y: box.y + 4,
-				size: 14,
-				font: helvBold,
-				color: rgb(.12, .2, .22)
-			});
-		}
-	}
-}
-async function bakePdf(input) {
-	const src = await PDFDocument.load(input.bytes, {
-		ignoreEncryption: true,
-		password: input.openPassword
-	});
-	const out = await PDFDocument.create();
-	const helv = await out.embedFont(StandardFonts.Helvetica);
-	const helvBold = await out.embedFont(StandardFonts.HelveticaBold);
-	const byPage = /* @__PURE__ */ new Map();
-	for (const a of input.annotations) {
-		const list = byPage.get(a.pageIndex) ?? [];
-		list.push(a);
-		byPage.set(a.pageIndex, list);
-	}
-	for (let i = 0; i < input.pageOrder.length; i++) {
-		const original = input.pageOrder[i];
-		const extra = input.rotations[original] ?? 0;
-		const list = byPage.get(original) ?? [];
-		const redacts = list.filter((a) => a.type === "redact");
-		let page;
-		let skipRedact = false;
-		if (redacts.length > 0) {
-			const raster = await rasterizePage({
-				pageNumber: original + 1,
-				extraRotation: extra,
-				redactions: redacts.map((a) => ({
-					x: a.x,
-					y: a.y,
-					w: a.w,
-					h: a.h
-				})),
-				scale: 2,
-				mime: "image/png"
-			});
-			const img = await out.embedPng(raster.bytes);
-			page = out.addPage([raster.widthPt, raster.heightPt]);
-			page.drawImage(img, {
-				x: 0,
-				y: 0,
-				width: raster.widthPt,
-				height: raster.heightPt
-			});
-			skipRedact = true;
-		} else {
-			const [copied] = await out.copyPages(src, [original]);
-			if (extra) {
-				const current = copied.getRotation().angle;
-				copied.setRotation(degrees(((current + extra) % 360 + 360) % 360));
-			}
-			out.addPage(copied);
-			page = copied;
-		}
-		await drawMarks(page, list, out, helv, helvBold, skipRedact);
-	}
-	if (input.userPassword) out.encrypt({
-		userPassword: input.userPassword,
-		ownerPassword: input.ownerPassword || input.userPassword,
-		permissions: {
-			printing: "highResolution",
-			modifying: false,
-			copying: true,
-			annotating: true,
-			fillingForms: true,
-			contentAccessibility: true,
-			documentAssembly: false
-		}
-	});
-	return out.save();
-}
-function parsePageRange(input, pageCount) {
-	const out = /* @__PURE__ */ new Set();
-	for (const part of input.split(",")) {
-		const bit = part.trim();
-		if (!bit) continue;
-		const m = bit.match(/^(\d+)\s*-\s*(\d+)$/);
-		if (m) {
-			let a = Number(m[1]);
-			let b = Number(m[2]);
-			if (a > b) [a, b] = [b, a];
-			for (let n = a; n <= b; n++) if (n >= 1 && n <= pageCount) out.add(n - 1);
-		} else {
-			const n = Number(bit);
-			if (Number.isInteger(n) && n >= 1 && n <= pageCount) out.add(n - 1);
-		}
-	}
-	return [...out];
 }
 var ink = rgb(.11, .1, .09);
 var muted = rgb(.42, .39, .36);
@@ -2173,26 +2072,650 @@ async function buildSamplePdf() {
 	last.setRotation(degrees(0));
 	return await doc.save();
 }
+var SETTINGS_KEY = "foliosyne-settings";
+function loadSettings() {
+	return {
+		theme: "light",
+		lang: "en",
+		homePrinter: "Home printer",
+		workPrinter: "Work printer",
+		signatures: []
+	};
+}
+function persist(s) {
+	try {
+		localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+			theme: s.theme,
+			lang: s.lang,
+			homePrinter: s.homePrinter,
+			workPrinter: s.workPrinter,
+			signatures: s.signatures
+		}));
+	} catch {}
+}
+var initialDoc = {
+	name: "",
+	kind: null,
+	bytes: null,
+	pageCount: 0,
+	pageOrder: [],
+	rotations: {},
+	annotations: [],
+	bookmarks: [],
+	currentPage: 1,
+	scale: 1.1,
+	fit: "width",
+	tool: "select",
+	panel: null,
+	status: "",
+	dirty: false,
+	loading: false,
+	password: "",
+	pendingPassword: false,
+	pendingBytes: null,
+	pendingName: "",
+	userPassword: "",
+	selection: null,
+	activeAnnotation: null,
+	activeSignature: null,
+	draftComment: "",
+	leftOpen: true,
+	rightTab: "bookmarks",
+	zoomTick: 0,
+	printMode: false
+};
+var useAppStore = create((set, get) => ({
+	...loadSettings(),
+	...initialDoc,
+	setTheme: (theme) => {
+		set({ theme });
+		persist(get());
+	},
+	setLang: (lang) => {
+		set({ lang });
+		persist(get());
+	},
+	setPrinters: (homePrinter, workPrinter) => {
+		set({
+			homePrinter,
+			workPrinter
+		});
+		persist(get());
+	},
+	addSignature: (sig) => {
+		set({
+			signatures: [...get().signatures, sig],
+			activeSignature: sig
+		});
+		persist(get());
+	},
+	removeSignature: (id) => {
+		set({
+			signatures: get().signatures.filter((s) => s.id !== id),
+			activeSignature: get().activeSignature?.id === id ? null : get().activeSignature
+		});
+		persist(get());
+	},
+	setActiveSignature: (sig) => set({
+		activeSignature: sig,
+		tool: sig ? "sign" : get().tool
+	}),
+	resetDocument: () => set({
+		...initialDoc,
+		status: get().status
+	}),
+	setDocument: ({ name, kind, bytes, pageCount }) => set({
+		name,
+		kind,
+		bytes,
+		pageCount,
+		pageOrder: Array.from({ length: pageCount }, (_, i) => i),
+		rotations: {},
+		annotations: [],
+		bookmarks: [],
+		currentPage: 1,
+		dirty: false,
+		loading: false,
+		pendingPassword: false,
+		pendingBytes: null,
+		pendingName: "",
+		userPassword: "",
+		selection: null,
+		activeAnnotation: null,
+		panel: null,
+		scale: 1.1,
+		fit: "width",
+		zoomTick: get().zoomTick + 1,
+		printMode: false
+	}),
+	setLoading: (loading) => set({ loading }),
+	setStatus: (status) => set({ status }),
+	setScale: (scale, fit = "custom") => {
+		const next = Math.max(.25, Math.min(4, scale));
+		const cur = get();
+		if (cur.scale === next && cur.fit === fit) return;
+		set({
+			scale: next,
+			fit,
+			zoomTick: cur.zoomTick + 1
+		});
+	},
+	setTool: (tool) => set({
+		tool,
+		panel: tool === "sign" && !get().activeSignature ? "sign" : get().panel
+	}),
+	setPanel: (panel) => set({ panel }),
+	setCurrentPage: (currentPage) => {
+		const next = Math.max(1, Math.min(get().pageCount || 1, currentPage));
+		if (get().currentPage === next) return;
+		set({ currentPage: next });
+	},
+	setSelection: (selection) => set({ selection }),
+	setPasswordGate: (pendingBytes, pendingName) => set({
+		pendingPassword: true,
+		pendingBytes,
+		pendingName,
+		panel: "password"
+	}),
+	clearPasswordGate: () => set({
+		pendingPassword: false,
+		pendingBytes: null,
+		pendingName: "",
+		panel: null
+	}),
+	setOpenPassword: (password) => set({ password }),
+	setUserPassword: (userPassword) => set({
+		userPassword,
+		dirty: true
+	}),
+	addAnnotation: (a) => {
+		const id = a.id ?? uid("ann");
+		const next = {
+			...a,
+			id,
+			createdAt: Date.now()
+		};
+		set({
+			annotations: [...get().annotations, next],
+			dirty: true,
+			activeAnnotation: id
+		});
+		return id;
+	},
+	updateAnnotation: (id, patch) => set({
+		annotations: get().annotations.map((x) => x.id === id ? {
+			...x,
+			...patch
+		} : x),
+		dirty: true
+	}),
+	removeAnnotation: (id) => set({
+		annotations: get().annotations.filter((x) => x.id !== id),
+		activeAnnotation: get().activeAnnotation === id ? null : get().activeAnnotation,
+		dirty: true
+	}),
+	setActiveAnnotation: (activeAnnotation) => set({ activeAnnotation }),
+	setBookmarks: (bookmarks) => set({ bookmarks }),
+	addBookmark: (b) => set({ bookmarks: [...get().bookmarks, {
+		...b,
+		id: b.id ?? uid("bm")
+	}] }),
+	removeBookmark: (id) => set({ bookmarks: get().bookmarks.filter((b) => b.id !== id) }),
+	rotatePages: (originalIndices, delta) => {
+		const rotations = { ...get().rotations };
+		for (const i of originalIndices) rotations[i] = (((rotations[i] ?? 0) + delta) % 360 + 360) % 360;
+		set({
+			rotations,
+			dirty: true,
+			zoomTick: get().zoomTick + 1
+		});
+	},
+	movePage: (displayIndex, dir) => {
+		const order = [...get().pageOrder];
+		const j = displayIndex + dir;
+		if (j < 0 || j >= order.length) return;
+		const tmp = order[displayIndex];
+		order[displayIndex] = order[j];
+		order[j] = tmp;
+		set({
+			pageOrder: order,
+			dirty: true,
+			currentPage: j + 1
+		});
+	},
+	setDraftComment: (draftComment) => set({ draftComment }),
+	setLeftOpen: (leftOpen) => set({ leftOpen }),
+	setRightTab: (rightTab) => set({ rightTab }),
+	markSaved: () => set({ dirty: false }),
+	setPrintMode: (printMode) => set({ printMode }),
+	seedEdits: (list) => {
+		if (!list.length) return;
+		const have = new Set(get().annotations.filter((a) => a.type === "edit" && a.source === "pdf").map((a) => `${a.pageIndex}:${a.y.toFixed(4)}:${a.x.toFixed(4)}`));
+		const extra = list.filter((a) => {
+			const key = `${a.pageIndex}:${a.y.toFixed(4)}:${a.x.toFixed(4)}`;
+			if (have.has(key)) return false;
+			have.add(key);
+			return true;
+		});
+		if (!extra.length) return;
+		set({ annotations: [...get().annotations, ...extra] });
+	}
+}));
+function useT() {
+	const lang = useAppStore((s) => s.lang);
+	return (key, params) => translate(lang, key, params);
+}
+async function ingestPdf(bytes, name, password) {
+	const store = useAppStore.getState();
+	store.setLoading(true);
+	store.setStatus("Opening document…");
+	try {
+		const result = await openPdfBytes(bytes, password);
+		if (!result.ok && result.needPassword) {
+			store.setLoading(false);
+			store.setStatus("");
+			store.setPasswordGate(bytes, name);
+			return;
+		}
+		if (!result.ok) {
+			store.setLoading(false);
+			store.setStatus("");
+			toast.error(result.message || "Could not open that file.");
+			return;
+		}
+		store.setDocument({
+			name,
+			kind: "pdf",
+			bytes,
+			pageCount: result.pageCount
+		});
+		store.setOpenPassword(password || "");
+		try {
+			const outlined = await outlineBookmarks();
+			if (outlined.length) store.setBookmarks(outlined);
+			else {
+				const auto = await detectHeadings(result.pageCount, Array.from({ length: result.pageCount }, (_, i) => i));
+				store.setBookmarks(auto);
+			}
+		} catch {}
+		try {
+			await putFile({
+				id: uid("file"),
+				name,
+				kind: "pdf",
+				bytes: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+				savedAt: Date.now()
+			});
+		} catch {}
+	} catch (err) {
+		toast.error(err instanceof Error ? err.message : "Could not open that file.");
+	} finally {
+		const s = useAppStore.getState();
+		s.setLoading(false);
+		s.setStatus("");
+	}
+}
+async function ingestDocx(buffer, name) {
+	const store = useAppStore.getState();
+	store.setLoading(true);
+	try {
+		await ingestPdf(await blocksToPdf(await parseDocx(buffer), name), name.replace(/\.docx?$/i, "") + ".pdf");
+	} catch (err) {
+		store.setLoading(false);
+		store.setStatus("");
+		toast.error(err instanceof Error ? err.message : "Not a Word document");
+	}
+}
+async function ingestFile(file) {
+	try {
+		const name = file.name || "document";
+		const buf = await file.arrayBuffer();
+		const bytes = new Uint8Array(buf);
+		const lower = name.toLowerCase();
+		if (lower.endsWith(".docx") || lower.endsWith(".doc")) {
+			await ingestDocx(buf, name);
+			return;
+		}
+		await ingestPdf(bytes, name.endsWith(".pdf") ? name : `${name}.pdf`);
+	} catch (err) {
+		useAppStore.getState().setLoading(false);
+		useAppStore.getState().setStatus("");
+		toast.error(err instanceof Error ? err.message : "Could not open that file.");
+	}
+}
+async function openSampleDocument() {
+	const store = useAppStore.getState();
+	store.setLoading(true);
+	store.setStatus("Opening sample…");
+	try {
+		await ingestPdf(await buildSamplePdf(), "Foliosyne studio guide.pdf");
+	} catch (err) {
+		store.setLoading(false);
+		store.setStatus("");
+		toast.error(err instanceof Error ? err.message : "Could not open the sample document.");
+	}
+}
+function mapFont(name) {
+	const n = name.toLowerCase();
+	if (/courier|mono/.test(n)) return "Courier New";
+	if (/helvetica|arial|sans|outfit|ui/.test(n)) return "Arial";
+	if (/georgia/.test(n)) return "Georgia";
+	return "Times New Roman";
+}
+var seeding = /* @__PURE__ */ new Set();
+async function seedPageEdits(pageIndex, extraRotation = 0) {
+	const s = useAppStore.getState();
+	if (seeding.has(pageIndex)) return;
+	if (s.annotations.some((a) => a.type === "edit" && a.source === "pdf" && a.pageIndex === pageIndex)) return;
+	seeding.add(pageIndex);
+	try {
+		const layout = await extractPageLayout(pageIndex + 1, extraRotation);
+		const list = [];
+		for (const line of layout.lines) {
+			const text = line.text.replace(/\s+/g, " ");
+			if (!text.trim()) continue;
+			list.push({
+				id: uid("ann"),
+				type: "edit",
+				pageIndex,
+				x: line.x / layout.widthPt,
+				y: line.y / layout.heightPt,
+				w: Math.max(.03, (line.w + 6) / layout.widthPt),
+				h: Math.max(.016, (line.h + 3) / layout.heightPt),
+				text,
+				fontFamily: mapFont(line.fontName),
+				fontSize: line.fontSize,
+				bold: line.bold,
+				italic: line.italic,
+				color: "#1C1917",
+				align: "left",
+				source: "pdf",
+				createdAt: Date.now()
+			});
+		}
+		useAppStore.getState().seedEdits(list);
+	} finally {
+		seeding.delete(pageIndex);
+	}
+}
+var EDIT_FONTS = [
+	"Times New Roman",
+	"Georgia",
+	"Garamond",
+	"Arial",
+	"Calibri",
+	"Courier New"
+];
+function pdfBox(page, a) {
+	const { width, height } = page.getSize();
+	return {
+		x: a.x * width,
+		y: height - (a.y + a.h) * height,
+		w: a.w * width,
+		h: a.h * height
+	};
+}
+function wrapFont(font, text, size, max) {
+	const words = text.split(/\s+/);
+	const lines = [];
+	let cur = "";
+	for (const w of words) {
+		const next = cur ? `${cur} ${w}` : w;
+		if (font.widthOfTextAtSize(next, size) > max && cur) {
+			lines.push(cur);
+			cur = w;
+		} else cur = next;
+	}
+	if (cur) lines.push(cur);
+	return lines;
+}
+async function drawMarks(page, list, out, helv, helvBold, skipRedact) {
+	for (const a of list) {
+		const box = pdfBox(page, a);
+		if (a.type === "redact") {
+			if (skipRedact) continue;
+			page.drawRectangle({
+				x: box.x,
+				y: box.y,
+				width: box.w,
+				height: box.h,
+				color: rgb(0, 0, 0)
+			});
+		} else if (a.type === "highlight") page.drawRectangle({
+			x: box.x,
+			y: box.y,
+			width: box.w,
+			height: box.h,
+			color: rgb(.91, .79, .41),
+			opacity: .38
+		});
+		else if (a.type === "text" && a.text) {
+			if (skipRedact) continue;
+			const size = Math.max(8, Math.min(18, box.h * .7));
+			const lines = wrapFont(helv, a.text, size, Math.max(20, box.w - 4));
+			let y = box.y + box.h - size - 2;
+			for (const line of lines) {
+				page.drawText(line, {
+					x: box.x + 2,
+					y,
+					size,
+					font: helv,
+					color: rgb(.11, .1, .09),
+					maxWidth: box.w - 4
+				});
+				y -= size + 2;
+			}
+		} else if (a.type === "comment") page.drawRectangle({
+			x: box.x,
+			y: box.y + box.h - 14,
+			width: 14,
+			height: 14,
+			color: rgb(.95, .89, .63),
+			borderColor: rgb(.55, .45, .2),
+			borderWidth: .6
+		});
+		else if (a.type === "signature" && a.imageDataUrl) try {
+			const bytes = dataUrlToBytes(a.imageDataUrl);
+			const img = a.imageDataUrl.startsWith("data:image/jpeg") ? await out.embedJpg(bytes) : await out.embedPng(bytes);
+			page.drawImage(img, {
+				x: box.x,
+				y: box.y,
+				width: box.w,
+				height: box.h
+			});
+		} catch {
+			page.drawText(a.text || "Signature", {
+				x: box.x,
+				y: box.y + 4,
+				size: 14,
+				font: helvBold,
+				color: rgb(.12, .2, .22)
+			});
+		}
+	}
+}
+async function bakePdf(input) {
+	const src = await PDFDocument.load(input.bytes, {
+		ignoreEncryption: true,
+		password: input.openPassword
+	});
+	const out = await PDFDocument.create();
+	const helv = await out.embedFont(StandardFonts.Helvetica);
+	const helvBold = await out.embedFont(StandardFonts.HelveticaBold);
+	const byPage = /* @__PURE__ */ new Map();
+	for (const a of input.annotations) {
+		const list = byPage.get(a.pageIndex) ?? [];
+		list.push(a);
+		byPage.set(a.pageIndex, list);
+	}
+	for (let i = 0; i < input.pageOrder.length; i++) {
+		const original = input.pageOrder[i];
+		const extra = input.rotations[original] ?? 0;
+		const list = byPage.get(original) ?? [];
+		const redacts = list.filter((a) => a.type === "redact");
+		const edits = list.filter((a) => a.type === "edit" || a.type === "text" && a.text);
+		let page;
+		let skipRedact = false;
+		if (redacts.length > 0 || edits.length > 0) {
+			const raster = await rasterizePage({
+				pageNumber: original + 1,
+				extraRotation: extra,
+				redactions: redacts.map((a) => ({
+					x: a.x,
+					y: a.y,
+					w: a.w,
+					h: a.h
+				})),
+				scale: 2,
+				mime: "image/png"
+			});
+			const painted = edits.length ? await paintTextOnRaster(raster, edits.map((a) => ({
+				x: a.x,
+				y: a.y,
+				w: a.w,
+				h: a.h,
+				text: a.text || "",
+				fontSize: a.fontSize,
+				fontFamily: a.fontFamily,
+				bold: a.bold,
+				italic: a.italic,
+				underline: a.underline,
+				strike: a.strike,
+				color: a.color,
+				align: a.align,
+				knockout: a.source === "pdf"
+			}))) : raster.bytes;
+			const img = await out.embedPng(painted);
+			page = out.addPage([raster.widthPt, raster.heightPt]);
+			page.drawImage(img, {
+				x: 0,
+				y: 0,
+				width: raster.widthPt,
+				height: raster.heightPt
+			});
+			skipRedact = true;
+		} else {
+			const [copied] = await out.copyPages(src, [original]);
+			if (extra) {
+				const current = copied.getRotation().angle;
+				copied.setRotation(degrees(((current + extra) % 360 + 360) % 360));
+			}
+			out.addPage(copied);
+			page = copied;
+		}
+		await drawMarks(page, list, out, helv, helvBold, skipRedact);
+	}
+	if (input.userPassword) out.encrypt({
+		userPassword: input.userPassword,
+		ownerPassword: input.ownerPassword || input.userPassword,
+		permissions: {
+			printing: "highResolution",
+			modifying: false,
+			copying: true,
+			annotating: true,
+			fillingForms: true,
+			contentAccessibility: true,
+			documentAssembly: false
+		}
+	});
+	return out.save();
+}
+function parsePageRange(input, pageCount) {
+	const out = /* @__PURE__ */ new Set();
+	for (const part of input.split(",")) {
+		const bit = part.trim();
+		if (!bit) continue;
+		const m = bit.match(/^(\d+)\s*-\s*(\d+)$/);
+		if (m) {
+			let a = Number(m[1]);
+			let b = Number(m[2]);
+			if (a > b) [a, b] = [b, a];
+			for (let n = a; n <= b; n++) if (n >= 1 && n <= pageCount) out.add(n - 1);
+		} else {
+			const n = Number(bit);
+			if (Number.isInteger(n) && n >= 1 && n <= pageCount) out.add(n - 1);
+		}
+	}
+	return [...out];
+}
+function bytesToBlobUrl(bytes) {
+	const copy = new Uint8Array(bytes.byteLength);
+	copy.set(bytes);
+	return URL.createObjectURL(new Blob([copy], { type: "application/pdf" }));
+}
+function removeFrame() {
+	document.getElementById("folio-print-frame")?.remove();
+}
+/**
+* Print the baked PDF itself (vector pages, exact count and size).
+* Never print the studio HTML — that is what created blank/split sheets.
+*/
 async function printStudio() {
 	const s = useAppStore.getState();
 	s.setPanel(null);
-	if (!s.bytes || s.pageCount < 1) {
+	if (!s.bytes || s.pageOrder.length < 1) {
 		window.print();
 		return;
 	}
-	s.setPrintMode(true);
-	const deadline = Date.now() + 12e3;
+	s.setStatus("Preparing print…");
+	removeFrame();
 	try {
-		while (Date.now() < deadline) {
-			if (document.querySelectorAll(".page-sheet canvas[data-rendered='1']").length >= s.pageCount) break;
-			await new Promise((r) => setTimeout(r, 80));
-		}
-		await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
-		window.print();
-	} finally {
-		const done = () => useAppStore.getState().setPrintMode(false);
-		window.addEventListener("afterprint", done, { once: true });
-		window.setTimeout(done, 2e3);
+		const url = bytesToBlobUrl(await bakePdf({
+			bytes: s.bytes,
+			pageOrder: s.pageOrder,
+			rotations: s.rotations,
+			annotations: s.annotations,
+			openPassword: s.password || void 0
+		}));
+		const iframe = document.createElement("iframe");
+		iframe.id = "folio-print-frame";
+		iframe.title = "Print preview";
+		iframe.setAttribute("aria-hidden", "true");
+		iframe.src = url;
+		iframe.style.cssText = [
+			"position:fixed",
+			"top:0",
+			"left:0",
+			"width:100vw",
+			"height:100vh",
+			"border:0",
+			"margin:0",
+			"padding:0",
+			"opacity:0.02",
+			"pointer-events:none",
+			"z-index:2147483646",
+			"background:#fff"
+		].join(";");
+		document.body.appendChild(iframe);
+		let printed = false;
+		const cleanup = () => {
+			removeFrame();
+			URL.revokeObjectURL(url);
+			useAppStore.getState().setStatus("");
+		};
+		const trigger = () => {
+			if (printed) return;
+			printed = true;
+			try {
+				iframe.contentWindow?.focus();
+				iframe.contentWindow?.print();
+			} catch {
+				const w = window.open(url, "_blank");
+				w?.addEventListener("load", () => w.print());
+			}
+		};
+		iframe.addEventListener("load", () => {
+			try {
+				iframe.contentWindow?.addEventListener("afterprint", cleanup, { once: true });
+			} catch {}
+			window.setTimeout(trigger, 350);
+		});
+		window.setTimeout(trigger, 1600);
+		window.addEventListener("afterprint", cleanup, { once: true });
+		window.setTimeout(cleanup, 18e4);
+	} catch (err) {
+		useAppStore.getState().setStatus("");
+		throw err;
 	}
 }
 function FolioMark({ className }) {
@@ -2340,8 +2863,9 @@ function AppPanels() {
 		help: t("help.title"),
 		cloud: t("share.title")
 	};
+	if (!(panel !== null)) return null;
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dialog, {
-		open: panel !== null,
+		open: true,
 		onOpenChange: (v) => !v && setPanel(null),
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(DialogContent, {
 			title: panel ? titleMap[panel] : void 0,
@@ -2857,11 +3381,10 @@ function SharePanel() {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "flex flex-col gap-3",
 		children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+			bytes ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 				className: "text-sm text-muted",
 				children: t("share.hint")
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "flex flex-wrap gap-2",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 					onClick: () => void download(),
@@ -2871,11 +3394,14 @@ function SharePanel() {
 					onClick: () => void share(),
 					children: t("share.webShare")
 				})]
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+			})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 				className: "text-sm text-muted",
 				children: t("share.driveHint")
 			}),
+			bytes ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-sm text-muted",
+				children: t("share.driveHint")
+			}) : null,
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "flex gap-2",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
@@ -3069,30 +3595,46 @@ function HelpPanel() {
 		]
 	});
 }
-function FilePicker({ id, accept, onFile, children }) {
-	const [ready, setReady] = (0, import_react.useState)(false);
-	(0, import_react.useEffect)(() => setReady(true), []);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [ready ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+var ACCEPT = ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+/**
+* Always-mounted file input (visually hidden, NOT display:none) plus a pick()
+* callback. Label+display:none inputs silently do nothing in iframes/WebKit.
+*/
+function FilePicker({ id, accept = ACCEPT, onFile, children }) {
+	const ref = (0, import_react.useRef)(null);
+	const pick = () => {
+		const el = ref.current;
+		if (!el) return;
+		el.value = "";
+		el.click();
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+		ref,
 		id,
 		type: "file",
 		accept,
-		className: "hidden",
+		className: "file-ghost",
+		tabIndex: -1,
+		"aria-hidden": "true",
+		suppressHydrationWarning: true,
 		onChange: (e) => {
 			const f = e.target.files?.[0];
 			if (f) onFile(f);
 			e.currentTarget.value = "";
 		}
-	}) : null, children] });
+	}), typeof children === "function" ? children(pick) : children] });
 }
 function focusAnnotField(id) {
 	const run = () => {
-		const el = document.querySelector(`textarea[data-annot-id="${id}"]`);
+		const el = document.querySelector(`[data-annot-id="${id}"]`);
 		if (!el) return false;
 		el.focus();
-		const len = el.value.length;
-		try {
-			el.setSelectionRange(len, len);
-		} catch {}
+		if (el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement) {
+			const len = el.value.length;
+			try {
+				el.setSelectionRange(len, len);
+			} catch {}
+		}
 		return true;
 	};
 	if (run()) return;
@@ -3199,6 +3741,14 @@ function PageView({ originalIndex, displayIndex, width, rotation, scale, tool })
 		rotation,
 		scale
 	]);
+	(0, import_react.useEffect)(() => {
+		if (tool !== "edit") return;
+		seedPageEdits(originalIndex, rotation);
+	}, [
+		tool,
+		originalIndex,
+		rotation
+	]);
 	const local = (e) => {
 		const r = hostRef.current.getBoundingClientRect();
 		return {
@@ -3207,7 +3757,7 @@ function PageView({ originalIndex, displayIndex, width, rotation, scale, tool })
 		};
 	};
 	const drawing = tool === "redact" || tool === "highlight";
-	const placing = tool === "text" || tool === "comment" || tool === "sign";
+	const placing = tool === "comment" || tool === "sign" || tool === "edit";
 	const onPointerDown = (e) => {
 		if (tool === "select" || tool === "pan") return;
 		if (e.target.closest("[data-annot]")) return;
@@ -3235,14 +3785,18 @@ function PageView({ originalIndex, displayIndex, width, rotation, scale, tool })
 					imageDataUrl: activeSignature.dataUrl,
 					text: activeSignature.name
 				});
-			} else if (tool === "text") focusAnnotField(addAnnotation({
-				type: "text",
+			} else if (tool === "edit") focusAnnotField(addAnnotation({
+				type: "edit",
 				pageIndex: originalIndex,
-				x: Math.min(p.x, .72),
-				y: Math.min(p.y, .92),
+				x: Math.min(p.x, .7),
+				y: Math.min(p.y, .94),
 				w: .28,
-				h: .06,
-				text: ""
+				h: .04,
+				text: "",
+				fontFamily: "Times New Roman",
+				fontSize: 12,
+				color: "#1C1917",
+				source: "user"
 			}));
 			else if (tool === "comment") {
 				const id = addAnnotation({
@@ -3252,7 +3806,8 @@ function PageView({ originalIndex, displayIndex, width, rotation, scale, tool })
 					y: p.y,
 					w: .04,
 					h: .03,
-					text: ""
+					text: "",
+					confirmed: false
 				});
 				setRightTab("comments");
 				focusAnnotField(id);
@@ -3299,7 +3854,11 @@ function PageView({ originalIndex, displayIndex, width, rotation, scale, tool })
 			h: r.height / host.height
 		});
 	};
-	const pageAnnots = annotations.filter((a) => a.pageIndex === originalIndex);
+	const pageAnnots = annotations.filter((a) => {
+		if (a.pageIndex !== originalIndex) return false;
+		if (a.type === "edit" && tool !== "edit") return false;
+		return true;
+	});
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		ref: hostRef,
 		className: "page-sheet relative mx-auto bg-white shadow-[var(--shadow-border)]",
@@ -3317,7 +3876,10 @@ function PageView({ originalIndex, displayIndex, width, rotation, scale, tool })
 				ref: textRef,
 				className: "textLayer",
 				onMouseUp: onTextSelect,
-				style: { pointerEvents: tool === "select" ? "auto" : "none" }
+				style: {
+					pointerEvents: tool === "select" ? "auto" : "none",
+					opacity: tool === "edit" ? 0 : 1
+				}
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: cn("annot-layer absolute inset-0", (tool === "select" || tool === "pan") && "pointer-events-none", tool === "pan" && "cursor-grab", drawing && "cursor-crosshair", placing && "cursor-copy"),
@@ -3327,8 +3889,12 @@ function PageView({ originalIndex, displayIndex, width, rotation, scale, tool })
 				children: [pageAnnots.map((a) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AnnotBox, {
 					a,
 					active: activeAnnotation === a.id,
+					pageWidth: width,
 					onSelect: () => setActiveAnnotation(a.id),
-					onChange: (patch) => updateAnnotation(a.id, patch),
+					onChange: (patch) => {
+						updateAnnotation(a.id, patch);
+						if (patch.confirmed) setActiveAnnotation(null);
+					},
 					onRemove: () => removeAnnotation(a.id),
 					t
 				}, a.id)), draftBox ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -3344,11 +3910,11 @@ function PageView({ originalIndex, displayIndex, width, rotation, scale, tool })
 		]
 	});
 }
-function AnnotBox({ a, active, onSelect, onChange, onRemove, t }) {
+function AnnotBox({ a, active, pageWidth, onSelect, onChange, onRemove, t }) {
 	const inputRef = (0, import_react.useRef)(null);
 	(0, import_react.useEffect)(() => {
 		if (!active) return;
-		if (a.type !== "text" && a.type !== "comment") return;
+		if (a.type !== "text" && a.type !== "comment" && a.type !== "edit") return;
 		const id = window.setTimeout(() => {
 			const el = inputRef.current;
 			if (!el) return;
@@ -3415,21 +3981,37 @@ function AnnotBox({ a, active, onSelect, onChange, onRemove, t }) {
 			draggable: false
 		}) : null
 	});
-	if (a.type === "text") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", {
-		ref: inputRef,
-		"data-annot": a.id,
-		"data-annot-id": a.id,
-		className: cn("absolute resize-none p-1.5 text-sm leading-snug text-ink outline-none", active ? "bg-surface ring-2 ring-accent" : "border border-dashed border-accent/50 bg-surface/70"),
-		style,
-		value: a.text ?? "",
-		placeholder: t("tool.text"),
-		autoFocus: active,
-		onFocus: onSelect,
-		onChange: (e) => onChange({ text: e.target.value }),
-		onPointerDown: (e) => e.stopPropagation(),
-		onClick: (e) => e.stopPropagation(),
-		onKeyDown: (e) => e.stopPropagation()
-	});
+	if (a.type === "text" || a.type === "edit") {
+		const fontSize = (a.fontSize ?? 12) * pageWidth / 612;
+		const editStyle = {
+			...style,
+			fontFamily: a.fontFamily || "Times New Roman",
+			fontSize: `${fontSize}px`,
+			fontWeight: a.bold ? 700 : 400,
+			fontStyle: a.italic ? "italic" : "normal",
+			textDecoration: [a.underline ? "underline" : "", a.strike ? "line-through" : ""].filter(Boolean).join(" ") || void 0,
+			color: a.color || "#1C1917",
+			textAlign: a.align || "left",
+			paddingLeft: a.indent ? `${a.indent}px` : void 0,
+			background: a.type === "edit" ? "color-mix(in oklab, var(--fs-paper) 88%, transparent)" : void 0
+		};
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", {
+			ref: inputRef,
+			"data-annot": a.id,
+			"data-annot-id": a.id,
+			className: cn("absolute resize-none overflow-hidden leading-tight outline-none", active ? "ring-2 ring-accent" : a.type === "edit" ? "ring-1 ring-accent/25" : "border border-dashed border-accent/50 bg-surface/70"),
+			style: editStyle,
+			value: a.text ?? "",
+			placeholder: a.type === "edit" ? "" : t("edit.addText"),
+			autoFocus: active && a.source === "user",
+			onFocus: onSelect,
+			onChange: (e) => onChange({ text: e.target.value }),
+			onPointerDown: (e) => e.stopPropagation(),
+			onClick: (e) => e.stopPropagation(),
+			onKeyDown: (e) => e.stopPropagation()
+		});
+	}
+	const open = a.confirmed !== true;
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		"data-annot": a.id,
 		className: "absolute z-10",
@@ -3442,12 +4024,18 @@ function AnnotBox({ a, active, onSelect, onChange, onRemove, t }) {
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 			type: "button",
 			className: cn("flex size-6 items-center justify-center rounded-[2px] bg-sticky text-ink shadow-[var(--shadow-border)]", active && "ring-2 ring-accent"),
+			"aria-label": t("tool.comment"),
 			onClick: (e) => {
 				e.stopPropagation();
 				onSelect();
 			},
+			onDoubleClick: (e) => {
+				e.stopPropagation();
+				onChange({ confirmed: false });
+				onSelect();
+			},
 			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MessageSquare, { className: "size-3.5" })
-		}), active ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		}), open ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "absolute start-7 top-0 z-20 w-56 rounded-md bg-surface p-2 shadow-[var(--shadow-border)]",
 			onPointerDown: (e) => e.stopPropagation(),
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", {
@@ -3458,13 +4046,27 @@ function AnnotBox({ a, active, onSelect, onChange, onRemove, t }) {
 				value: a.text ?? "",
 				autoFocus: true,
 				onChange: (e) => onChange({ text: e.target.value }),
-				onKeyDown: (e) => e.stopPropagation(),
+				onKeyDown: (e) => {
+					e.stopPropagation();
+					if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+						e.preventDefault();
+						onChange({ confirmed: true });
+					}
+				},
 				onClick: (e) => e.stopPropagation()
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-				type: "button",
-				className: "text-xs text-danger",
-				onClick: onRemove,
-				children: t("action.delete")
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mt-1 flex items-center justify-between gap-2",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
+					className: "text-xs text-danger",
+					onClick: onRemove,
+					children: t("action.delete")
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					type: "button",
+					className: "inline-flex items-center gap-1 rounded-sm bg-accent px-2 py-1 text-xs text-accent-fg",
+					onClick: () => onChange({ confirmed: true }),
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "size-3.5" }), t("comment.confirm")]
+				})]
 			})]
 		}) : null]
 	});
@@ -3624,6 +4226,7 @@ function AppShell() {
 	const theme = useAppStore((s) => s.theme);
 	const lang = useAppStore((s) => s.lang);
 	const bytes = useAppStore((s) => s.bytes);
+	const loading = useAppStore((s) => s.loading);
 	(0, import_react.useEffect)(() => {
 		try {
 			const raw = localStorage.getItem("foliosyne-settings");
@@ -3648,6 +4251,27 @@ function AppShell() {
 		document.documentElement.dir = meta.dir;
 	}, [lang]);
 	useHotkeys();
+	(0, import_react.useEffect)(() => {
+		const open = new URLSearchParams(window.location.search).get("open");
+		if (open === "sample") {
+			window.history.replaceState({}, "", window.location.pathname);
+			openSampleDocument();
+		} else if (open === "drive") {
+			window.history.replaceState({}, "", window.location.pathname);
+			useAppStore.getState().setPanel("share");
+		}
+	}, []);
+	(0, import_react.useEffect)(() => {
+		if (!loading) return;
+		const id = window.setTimeout(() => {
+			const s = useAppStore.getState();
+			if (!s.loading) return;
+			s.setLoading(false);
+			s.setStatus("");
+			toast.error("That took too long. Try the sample document or another file.");
+		}, 25e3);
+		return () => window.clearTimeout(id);
+	}, [loading]);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TooltipProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "paper-grain flex h-dvh min-h-0 flex-col bg-bg text-fg print-root",
 		children: [
@@ -3792,13 +4416,15 @@ function TopBar() {
 						id: "file-open",
 						accept: ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 						onFile: (f) => void ingestFile(f),
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
+						children: (pick) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
 							label: t("action.open"),
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 								variant: "ghost",
 								size: "icon-sm",
-								asChild: true,
-								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileUp, {}) })
+								type: "button",
+								"aria-label": t("action.open"),
+								onClick: pick,
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileUp, {})
 							})
 						})
 					}),
@@ -3893,6 +4519,7 @@ function Studio() {
 				className: "flex min-w-0 flex-1 flex-col",
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToolStrip, {}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(EditBar, {}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 						className: "min-h-0 flex-1",
 						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Viewer, {})
@@ -3914,7 +4541,6 @@ function ToolStrip() {
 	const currentPage = useAppStore((s) => s.currentPage);
 	const pageCount = useAppStore((s) => s.pageCount);
 	const setCurrentPage = useAppStore((s) => s.setCurrentPage);
-	const movePage = useAppStore((s) => s.movePage);
 	const rotatePages = useAppStore((s) => s.rotatePages);
 	const pageOrder = useAppStore((s) => s.pageOrder);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -3934,10 +4560,10 @@ function ToolStrip() {
 					help: "tool.help.pan"
 				},
 				{
-					id: "text",
-					icon: Type,
-					key: "tool.text",
-					help: "tool.help.text"
+					id: "edit",
+					icon: Pencil,
+					key: "tool.edit",
+					help: "tool.help.edit"
 				},
 				{
 					id: "highlight",
@@ -3975,30 +4601,37 @@ function ToolStrip() {
 						onClick: () => {
 							if (item.id === "sign") setPanel("sign");
 							setTool(item.id);
+							if (item.id === "edit") {
+								const st = useAppStore.getState();
+								const orig = st.pageOrder[st.currentPage - 1] ?? 0;
+								seedPageEdits(orig, st.rotations[orig] ?? 0);
+							}
 						},
 						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {})
 					})
 				}, item.id);
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "mx-1 h-5 w-px bg-border" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+				className: "px-1 text-xs tabular-nums text-muted",
+				children: [Math.round(scale * 100), "%"]
+			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
 				label: t("view.zoomOut"),
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 					variant: "ghost",
 					size: "icon-sm",
+					"aria-label": t("view.zoomOut"),
 					onClick: () => setScale(scale - .1),
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ZoomOut, {})
 				})
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-				className: "w-12 text-center font-mono text-xs tabular-nums text-muted",
-				children: [Math.round(scale * 100), "%"]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
 				label: t("view.zoomIn"),
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 					variant: "ghost",
 					size: "icon-sm",
+					"aria-label": t("view.zoomIn"),
 					onClick: () => setScale(scale + .1),
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ZoomIn, {})
 				})
@@ -4012,7 +4645,6 @@ function ToolStrip() {
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 				variant: "ghost",
 				size: "sm",
-				className: "hidden md:inline-flex",
 				onClick: () => setScale(1, "page"),
 				children: t("view.fitPage")
 			}),
@@ -4022,6 +4654,7 @@ function ToolStrip() {
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 					variant: "ghost",
 					size: "icon-sm",
+					"aria-label": t("view.pageUp"),
 					onClick: () => {
 						const n = Math.max(1, currentPage - 1);
 						setCurrentPage(n);
@@ -4031,7 +4664,7 @@ function ToolStrip() {
 				})
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-				className: "min-w-24 text-center text-xs tabular-nums text-muted",
+				className: "min-w-24 px-1 text-center text-xs tabular-nums text-muted",
 				children: t("view.pageOf", {
 					n: currentPage,
 					total: pageCount
@@ -4042,6 +4675,7 @@ function ToolStrip() {
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 					variant: "ghost",
 					size: "icon-sm",
+					"aria-label": t("view.pageDown"),
 					onClick: () => {
 						const n = Math.min(pageCount, currentPage + 1);
 						setCurrentPage(n);
@@ -4051,50 +4685,22 @@ function ToolStrip() {
 				})
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
-				label: t("view.moveUp"),
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-					variant: "ghost",
-					size: "sm",
-					onClick: () => movePage(currentPage - 1, -1),
-					children: t("view.moveUp")
-				})
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
-				label: t("view.moveDown"),
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-					variant: "ghost",
-					size: "sm",
-					onClick: () => movePage(currentPage - 1, 1),
-					children: t("view.moveDown")
-				})
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
 				label: t("view.rotatePage"),
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 					variant: "ghost",
 					size: "icon-sm",
-					onClick: () => rotatePages([pageOrder[currentPage - 1] ?? 0], 90),
+					"aria-label": t("action.rotate"),
+					onClick: () => {
+						const orig = pageOrder[currentPage - 1];
+						if (orig != null) rotatePages([orig], 90);
+						else setPanel("rotate");
+					},
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RotateCw, {})
 				})
 			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-				variant: "ghost",
-				size: "sm",
-				onClick: () => setPanel("rotate"),
-				children: t("action.rotate")
-			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "ms-auto flex gap-1",
+				className: "ms-auto flex items-center gap-1",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
-					label: t("action.protect"),
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-						variant: "ghost",
-						size: "icon-sm",
-						"aria-label": t("action.protect"),
-						onClick: () => setPanel("protect"),
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {})
-					})
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
 					label: t("action.translate"),
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 						variant: "ghost",
@@ -4103,6 +4709,253 @@ function ToolStrip() {
 						onClick: () => setPanel("translate"),
 						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Languages, {})
 					})
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
+					label: t("action.protect"),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+						variant: "ghost",
+						size: "icon-sm",
+						"aria-label": t("action.protect"),
+						onClick: () => setPanel("protect"),
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {})
+					})
+				})]
+			})
+		]
+	});
+}
+function EditBar() {
+	const t = useT();
+	const tool = useAppStore((s) => s.tool);
+	const addAnnotation = useAppStore((s) => s.addAnnotation);
+	const updateAnnotation = useAppStore((s) => s.updateAnnotation);
+	const activeAnnotation = useAppStore((s) => s.activeAnnotation);
+	const annotations = useAppStore((s) => s.annotations);
+	const currentPage = useAppStore((s) => s.currentPage);
+	const pageOrder = useAppStore((s) => s.pageOrder);
+	const movePage = useAppStore((s) => s.movePage);
+	const active = annotations.find((a) => a.id === activeAnnotation && a.type === "edit");
+	if (tool !== "edit") return null;
+	const patch = (p) => {
+		if (!active) return;
+		updateAnnotation(active.id, p);
+	};
+	const addText = () => {
+		const orig = pageOrder[currentPage - 1] ?? 0;
+		addAnnotation({
+			type: "edit",
+			pageIndex: orig,
+			x: .12,
+			y: .2,
+			w: .4,
+			h: .05,
+			text: "",
+			fontFamily: active?.fontFamily || "Times New Roman",
+			fontSize: active?.fontSize || 12,
+			color: active?.color || "#1C1917",
+			source: "user"
+		});
+	};
+	const btn = (on) => on ? "bg-accent text-accent-fg" : "text-fg hover:bg-paper";
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "no-print flex flex-wrap items-center gap-1 border-b border-border bg-paper px-2 py-1.5",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "pe-2 text-[11px] font-medium uppercase tracking-wide text-subtle",
+				children: t("tool.edit")
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
+				label: t("edit.addText"),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+					variant: "outline",
+					size: "sm",
+					onClick: addText,
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Type, {}), t("edit.addText")]
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", {
+				className: "h-8 max-w-40 rounded-sm border border-border bg-surface px-2 text-xs",
+				"aria-label": t("edit.font"),
+				value: active?.fontFamily || "Times New Roman",
+				onChange: (e) => patch({ fontFamily: e.target.value }),
+				children: EDIT_FONTS.map((f) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+					value: f,
+					children: f
+				}, f))
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+				type: "number",
+				min: 8,
+				max: 72,
+				className: "h-8 w-14 rounded-sm border border-border bg-surface px-1 text-xs",
+				"aria-label": t("edit.size"),
+				value: Math.round(active?.fontSize || 12),
+				onChange: (e) => patch({ fontSize: Number(e.target.value) || 12 })
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
+				label: t("edit.bold"),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					variant: "ghost",
+					size: "icon-sm",
+					className: btn(!!active?.bold),
+					"aria-pressed": !!active?.bold,
+					onClick: () => patch({ bold: !active?.bold }),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Bold, {})
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
+				label: t("edit.italic"),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					variant: "ghost",
+					size: "icon-sm",
+					className: btn(!!active?.italic),
+					"aria-pressed": !!active?.italic,
+					onClick: () => patch({ italic: !active?.italic }),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Italic, {})
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
+				label: t("edit.underline"),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					variant: "ghost",
+					size: "icon-sm",
+					className: btn(!!active?.underline),
+					"aria-pressed": !!active?.underline,
+					onClick: () => patch({ underline: !active?.underline }),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Underline, {})
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
+				label: t("edit.strike"),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					variant: "ghost",
+					size: "icon-sm",
+					className: btn(!!active?.strike),
+					"aria-pressed": !!active?.strike,
+					onClick: () => patch({ strike: !active?.strike }),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Strikethrough, {})
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
+				label: t("edit.super"),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					variant: "ghost",
+					size: "icon-sm",
+					className: btn(!!active?.superScript),
+					onClick: () => patch({
+						superScript: !active?.superScript,
+						subScript: false
+					}),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Superscript, {})
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
+				label: t("edit.sub"),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					variant: "ghost",
+					size: "icon-sm",
+					className: btn(!!active?.subScript),
+					onClick: () => patch({
+						subScript: !active?.subScript,
+						superScript: false
+					}),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Subscript, {})
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+				type: "color",
+				className: "size-8 cursor-pointer rounded-sm border border-border bg-surface p-0.5",
+				"aria-label": t("edit.color"),
+				value: active?.color || "#1C1917",
+				onChange: (e) => patch({ color: e.target.value })
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
+				label: t("edit.alignLeft"),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					variant: "ghost",
+					size: "icon-sm",
+					className: btn(active?.align === "left" || !active?.align),
+					onClick: () => patch({ align: "left" }),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AlignLeft, {})
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
+				label: t("edit.alignCenter"),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					variant: "ghost",
+					size: "icon-sm",
+					className: btn(active?.align === "center"),
+					onClick: () => patch({ align: "center" }),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AlignCenter, {})
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
+				label: t("edit.alignRight"),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					variant: "ghost",
+					size: "icon-sm",
+					className: btn(active?.align === "right"),
+					onClick: () => patch({ align: "right" }),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AlignRight, {})
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
+				label: t("edit.indent"),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					variant: "ghost",
+					size: "sm",
+					onClick: () => patch({ indent: Math.min(48, (active?.indent || 0) + 12) }),
+					children: t("edit.indent")
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+				className: "flex items-center gap-1 text-xs text-muted",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(List, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+					className: "h-8 rounded-sm border border-border bg-surface px-1 text-xs",
+					"aria-label": t("edit.bullet"),
+					value: active?.list || "none",
+					onChange: (e) => patch({ list: e.target.value }),
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+							value: "none",
+							children: "—"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+							value: "disc",
+							children: t("edit.bulletDisc")
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+							value: "circle",
+							children: t("edit.bulletCircle")
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+							value: "square",
+							children: t("edit.bulletSquare")
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+							value: "dash",
+							children: t("edit.bulletDash")
+						})
+					]
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "ms-auto flex items-center gap-1",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
+					label: t("view.moveUp"),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+						variant: "ghost",
+						size: "sm",
+						onClick: () => movePage(currentPage - 1, -1),
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronUp, {}), t("view.moveUp")]
+					})
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
+					label: t("view.moveDown"),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+						variant: "ghost",
+						size: "sm",
+						onClick: () => movePage(currentPage - 1, 1),
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronDown, {}), t("view.moveDown")]
+					})
 				})]
 			})
 		]
@@ -4110,181 +4963,152 @@ function ToolStrip() {
 }
 function LeftRail() {
 	const t = useT();
-	const leftOpen = useAppStore((s) => s.leftOpen);
 	const pageOrder = useAppStore((s) => s.pageOrder);
 	const currentPage = useAppStore((s) => s.currentPage);
 	const setCurrentPage = useAppStore((s) => s.setCurrentPage);
-	if (!leftOpen) return null;
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", {
-		className: "no-print hidden w-40 shrink-0 overflow-auto border-e border-border bg-surface p-2 md:block",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-			className: "mb-2 px-1 text-[11px] font-medium uppercase tracking-wide text-subtle",
+	const leftOpen = useAppStore((s) => s.leftOpen);
+	const setLeftOpen = useAppStore((s) => s.setLeftOpen);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [leftOpen ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+		type: "button",
+		className: "fixed inset-0 z-20 bg-ink/20 md:hidden",
+		"aria-label": t("action.close"),
+		onClick: () => setLeftOpen(false)
+	}) : null, /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", {
+		className: `no-print z-30 w-44 shrink-0 overflow-auto border-e border-border bg-surface p-3 ${leftOpen ? "fixed inset-y-14 start-0 md:static md:inset-auto" : "hidden md:block"}`,
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+			className: "text-[11px] font-medium uppercase tracking-wide text-subtle",
 			children: t("sidebar.pages")
 		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ol", {
-			className: "flex flex-col gap-2",
-			children: pageOrder.map((orig, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-				type: "button",
-				className: `w-full rounded-sm border px-2 py-2 text-start text-xs ${currentPage === i + 1 ? "border-accent bg-paper" : "border-border hover:bg-paper"}`,
-				onClick: () => {
-					setCurrentPage(i + 1);
-					scrollToPage(i + 1);
-				},
-				children: i + 1
-			}) }, orig))
+			className: "mt-2 grid grid-cols-2 gap-2",
+			children: pageOrder.map((original, display) => {
+				const n = display + 1;
+				return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
+					className: `flex aspect-[3/4] w-full cursor-pointer items-center justify-center rounded-sm bg-paper text-sm tabular-nums shadow-[var(--shadow-border)] ${currentPage === n ? "ring-2 ring-accent" : "hover:bg-bg"}`,
+					onClick: () => {
+						setCurrentPage(n);
+						scrollToPage(n);
+						setLeftOpen(false);
+					},
+					children: n
+				}) }, `${original}-${display}`);
+			})
 		})]
-	});
+	})] });
 }
 function RightRail() {
 	const t = useT();
-	const tab = useAppStore((s) => s.rightTab);
+	const rightTab = useAppStore((s) => s.rightTab);
 	const setRightTab = useAppStore((s) => s.setRightTab);
 	const bookmarks = useAppStore((s) => s.bookmarks);
-	const comments = useAppStore((s) => s.annotations).filter((a) => a.type === "comment");
 	const addBookmark = useAppStore((s) => s.addBookmark);
 	const removeBookmark = useAppStore((s) => s.removeBookmark);
 	const setBookmarks = useAppStore((s) => s.setBookmarks);
-	const updateAnnotation = useAppStore((s) => s.updateAnnotation);
-	const removeAnnotation = useAppStore((s) => s.removeAnnotation);
-	const setActiveAnnotation = useAppStore((s) => s.setActiveAnnotation);
 	const currentPage = useAppStore((s) => s.currentPage);
 	const pageOrder = useAppStore((s) => s.pageOrder);
 	const pageCount = useAppStore((s) => s.pageCount);
 	const setCurrentPage = useAppStore((s) => s.setCurrentPage);
-	const [name, setName] = (0, import_react.useState)("");
+	const annotations = useAppStore((s) => s.annotations);
+	const updateAnnotation = useAppStore((s) => s.updateAnnotation);
+	const setActiveAnnotation = useAppStore((s) => s.setActiveAnnotation);
+	const comments = annotations.filter((a) => a.type === "comment");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", {
-		className: "no-print hidden w-64 shrink-0 flex-col border-s border-border bg-surface md:flex",
+		className: "no-print hidden w-64 shrink-0 flex-col overflow-auto border-s border-border bg-surface lg:flex",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "flex border-b border-border",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 				type: "button",
-				className: `flex-1 py-2 text-xs font-medium ${tab === "bookmarks" ? "text-fg" : "text-muted"}`,
+				className: `flex-1 cursor-pointer px-3 py-2 text-xs font-medium ${rightTab === "bookmarks" ? "border-b-2 border-accent text-fg" : "text-muted"}`,
 				onClick: () => setRightTab("bookmarks"),
 				children: t("sidebar.bookmarks")
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 				type: "button",
-				className: `flex-1 py-2 text-xs font-medium ${tab === "comments" ? "text-fg" : "text-muted"}`,
+				className: `flex-1 cursor-pointer px-3 py-2 text-xs font-medium ${rightTab === "comments" ? "border-b-2 border-accent text-fg" : "text-muted"}`,
 				onClick: () => setRightTab("comments"),
 				children: t("sidebar.comments")
 			})]
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-			className: "min-h-0 flex-1 overflow-auto p-3",
-			children: tab === "bookmarks" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "flex flex-col gap-2",
-				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "flex gap-1",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-							className: "h-8 flex-1 rounded-sm border border-border bg-bg px-2 text-xs",
-							placeholder: t("sidebar.bookmarkName"),
-							value: name,
-							onChange: (e) => setName(e.target.value)
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
-							label: t("sidebar.addBookmark"),
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-								size: "icon-sm",
-								variant: "secondary",
-								onClick: () => {
-									addBookmark({
-										title: name.trim() || `${t("view.pageOf", {
-											n: currentPage,
-											total: pageCount
-										})}`,
-										pageIndex: pageOrder[currentPage - 1] ?? 0
-									});
-									setName("");
-								},
-								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BookmarkPlus, {})
-							})
-						})]
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-						size: "sm",
-						variant: "outline",
-						onClick: async () => {
+		}), rightTab === "bookmarks" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex flex-col gap-2 p-3",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex gap-1",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					size: "sm",
+					variant: "secondary",
+					className: "flex-1",
+					onClick: async () => {
+						try {
 							const auto = await detectHeadings(pageCount, pageOrder);
-							const manual = bookmarks.filter((b) => !b.auto);
-							setBookmarks([...manual, ...auto]);
+							if (auto.length) setBookmarks(auto);
+							else toast.message(t("sidebar.noBookmarks"));
+						} catch {
+							toast.error(t("sidebar.noBookmarks"));
+						}
+					},
+					children: t("sidebar.autoHeadings")
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tip, {
+					label: t("sidebar.addBookmark"),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+						size: "icon-sm",
+						variant: "outline",
+						"aria-label": t("sidebar.addBookmark"),
+						onClick: () => {
+							const pageIndex = pageOrder[currentPage - 1] ?? 0;
+							addBookmark({
+								title: `${t("sidebar.bookmarkName")} ${currentPage}`,
+								pageIndex
+							});
 						},
-						children: t("sidebar.autoHeadings")
-					}),
-					bookmarks.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-						className: "text-xs text-muted",
-						children: t("sidebar.noBookmarks")
-					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
-						className: "flex flex-col gap-1",
-						children: bookmarks.map((b) => {
-							const display = pageOrder.indexOf(b.pageIndex) + 1;
-							return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
-								className: "flex items-start gap-1",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-									type: "button",
-									className: "flex-1 rounded-sm px-2 py-1.5 text-start text-xs hover:bg-paper",
-									onClick: () => {
-										const n = Math.max(1, display);
-										setCurrentPage(n);
-										scrollToPage(n);
-									},
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-										className: "font-medium",
-										children: b.title
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-										className: "text-subtle",
-										children: t("view.pageOf", {
-											n: display,
-											total: pageCount
-										})
-									})]
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-									type: "button",
-									className: "p-1 text-subtle hover:text-danger",
-									onClick: () => removeBookmark(b.id),
-									children: "×"
-								})]
-							}, b.id);
-						})
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BookmarkPlus, {})
 					})
-				]
-			}) : comments.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				})]
+			}), bookmarks.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-xs text-muted",
+				children: t("sidebar.noBookmarks")
+			}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
+				className: "flex flex-col gap-1",
+				children: bookmarks.map((b) => {
+					const n = Math.max(1, pageOrder.indexOf(b.pageIndex) + 1);
+					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
+						className: "flex items-center gap-1",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							className: "min-w-0 flex-1 cursor-pointer truncate rounded-sm px-2 py-1.5 text-start text-sm hover:bg-paper",
+							onClick: () => {
+								setCurrentPage(n);
+								scrollToPage(n);
+							},
+							children: b.title
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							className: "cursor-pointer px-1 text-xs text-subtle hover:text-danger",
+							onClick: () => removeBookmark(b.id),
+							"aria-label": t("action.delete"),
+							children: "×"
+						})]
+					}, b.id);
+				})
+			})]
+		}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "flex flex-col gap-2 p-3",
+			children: comments.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 				className: "text-xs text-muted",
 				children: t("sidebar.noComments")
 			}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
 				className: "flex flex-col gap-2",
-				children: comments.map((c) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
-					className: "rounded-sm bg-paper p-2 text-xs",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "mb-1 flex items-center justify-between gap-2 text-subtle",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							type: "button",
-							className: "hover:text-fg",
-							onClick: () => {
-								const n = Math.max(1, pageOrder.indexOf(c.pageIndex) + 1);
-								setCurrentPage(n);
-								scrollToPage(n);
-								setActiveAnnotation(c.id);
-							},
-							children: t("view.pageOf", {
-								n: pageOrder.indexOf(c.pageIndex) + 1,
-								total: pageCount
-							})
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							type: "button",
-							className: "text-subtle hover:text-danger",
-							onClick: () => removeAnnotation(c.id),
-							children: "×"
-						})]
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", {
-						className: "min-h-14 w-full resize-none bg-transparent text-xs text-fg outline-none placeholder:text-subtle",
-						placeholder: t("comment.placeholder"),
-						value: c.text ?? "",
-						onFocus: () => {
-							setActiveAnnotation(c.id);
-							const n = Math.max(1, pageOrder.indexOf(c.pageIndex) + 1);
-							setCurrentPage(n);
-							scrollToPage(n);
-						},
-						onChange: (e) => updateAnnotation(c.id, { text: e.target.value })
-					})]
-				}, c.id))
+				children: comments.map((c) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", {
+					"data-annot-id": c.id,
+					className: "w-full resize-y rounded-sm border border-border bg-paper p-2 text-sm",
+					rows: 3,
+					placeholder: t("comment.placeholder"),
+					value: c.text ?? "",
+					onFocus: () => {
+						setActiveAnnotation(c.id);
+						const n = Math.max(1, pageOrder.indexOf(c.pageIndex) + 1);
+						setCurrentPage(n);
+						scrollToPage(n);
+					},
+					onChange: (e) => updateAnnotation(c.id, { text: e.target.value })
+				}) }, c.id))
 			})
 		})]
 	});
@@ -4313,13 +5137,24 @@ function StatusBar() {
 function EmptyState() {
 	const t = useT();
 	const loading = useAppStore((s) => s.loading);
+	const status = useAppStore((s) => s.status);
 	const [recent, setRecent] = (0, import_react.useState)([]);
 	const [over, setOver] = (0, import_react.useState)(false);
 	const drag = (0, import_react.useRef)(0);
+	const fileRef = (0, import_react.useRef)(null);
 	(0, import_react.useEffect)(() => {
 		listRecentMeta().then(setRecent).catch(() => setRecent([]));
 	}, [loading]);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("main", {
+	const pickFile = () => {
+		const el = fileRef.current;
+		if (!el) {
+			toast.error("File picker is not ready yet — try again.");
+			return;
+		}
+		el.value = "";
+		el.click();
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", {
 		className: "flex min-h-0 flex-1 flex-col items-center overflow-auto px-4 py-10",
 		onDragEnter: (e) => {
 			e.preventDefault();
@@ -4338,7 +5173,21 @@ function EmptyState() {
 			const f = e.dataTransfer.files[0];
 			if (f) ingestFile(f);
 		},
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+			ref: fileRef,
+			id: "empty-file-open",
+			type: "file",
+			accept: ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			className: "file-ghost",
+			tabIndex: -1,
+			"aria-hidden": "true",
+			suppressHydrationWarning: true,
+			onChange: (e) => {
+				const f = e.target.files?.[0];
+				if (f) ingestFile(f);
+				e.currentTarget.value = "";
+			}
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "mx-auto w-full max-w-xl",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
@@ -4362,35 +5211,48 @@ function EmptyState() {
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "mt-5 flex flex-wrap gap-2",
+							id: "empty-actions",
 							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FilePicker, {
-									accept: ".pdf,.docx",
-									onFile: (f) => void ingestFile(f),
-									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-										asChild: true,
-										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: t("file.browse") })
-									})
-								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-									variant: "secondary",
-									disabled: loading,
-									onClick: async () => {
-										useAppStore.getState().setLoading(true);
-										try {
-											await ingestPdf(await buildSamplePdf(), "Foliosyne studio guide.pdf");
-										} finally {
-											useAppStore.getState().setLoading(false);
-										}
+									type: "button",
+									"aria-label": t("file.browse"),
+									onClick: (e) => {
+										e.preventDefault();
+										e.stopPropagation();
+										pickFile();
 									},
-									children: t("file.sample")
+									children: t("file.browse")
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+									type: "button",
+									variant: "secondary",
+									"aria-label": t("file.sample"),
+									disabled: loading,
+									onClick: (e) => {
+										e.preventDefault();
+										e.stopPropagation();
+										openSampleDocument();
+									},
+									children: loading ? t("status.loading") : t("file.sample")
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+									type: "button",
 									variant: "outline",
-									onClick: () => useAppStore.getState().setPanel("share"),
+									"aria-label": t("file.openDrive"),
+									onClick: (e) => {
+										e.preventDefault();
+										e.stopPropagation();
+										useAppStore.getState().setPanel("share");
+									},
 									children: t("file.openDrive")
 								})
 							]
-						})
+						}),
+						loading ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-4 text-sm text-muted",
+							role: "status",
+							children: status || t("status.loading")
+						}) : null
 					]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
@@ -4405,11 +5267,13 @@ function EmptyState() {
 						className: "mt-2 divide-y divide-border rounded-lg bg-surface",
 						children: recent.map((r) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
-							className: "flex w-full items-center justify-between px-4 py-3 text-start text-sm hover:bg-paper",
-							onClick: async () => {
-								const row = await getFile(r.id);
-								if (!row) return;
-								await ingestPdf(new Uint8Array(row.bytes), row.name);
+							className: "flex w-full cursor-pointer items-center justify-between px-4 py-3 text-start text-sm hover:bg-paper",
+							onClick: () => {
+								(async () => {
+									const row = await getFile(r.id);
+									if (!row) return;
+									await ingestPdf(new Uint8Array(row.bytes), row.name);
+								})();
 							},
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: "truncate",
@@ -4426,7 +5290,7 @@ function EmptyState() {
 					children: t("app.subtitle")
 				})
 			]
-		})
+		})]
 	});
 }
 function Home() {

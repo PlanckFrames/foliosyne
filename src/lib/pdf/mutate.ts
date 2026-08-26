@@ -8,7 +8,7 @@ import {
 } from "@cantoo/pdf-lib";
 import type { Annotation } from "@/lib/types";
 import { dataUrlToBytes } from "@/lib/utils";
-import { rasterizePage } from "./engine";
+import { rasterizePage, paintTextOnRaster } from "./engine";
 
 export interface MutateInput {
   bytes: Uint8Array;
@@ -74,6 +74,7 @@ async function drawMarks(
         opacity: 0.38,
       });
     } else if (a.type === "text" && a.text) {
+      if (skipRedact) continue;
       const size = Math.max(8, Math.min(18, box.h * 0.7));
       const lines = wrapFont(helv, a.text, size, Math.max(20, box.w - 4));
       let y = box.y + box.h - size - 2;
@@ -91,27 +92,13 @@ async function drawMarks(
     } else if (a.type === "comment") {
       page.drawRectangle({
         x: box.x,
-        y: box.y,
+        y: box.y + box.h - 14,
         width: 14,
         height: 14,
         color: rgb(0.95, 0.89, 0.63),
         borderColor: rgb(0.55, 0.45, 0.2),
         borderWidth: 0.6,
       });
-      if (a.text) {
-        const lines = wrapFont(helv, a.text, 8, 160);
-        let y = box.y + 16;
-        for (const line of lines.slice(0, 8)) {
-          page.drawText(line, {
-            x: box.x + 18,
-            y,
-            size: 8,
-            font: helv,
-            color: rgb(0.25, 0.2, 0.12),
-          });
-          y -= 10;
-        }
-      }
     } else if (a.type === "signature" && a.imageDataUrl) {
       try {
         const bytes = dataUrlToBytes(a.imageDataUrl);
@@ -157,10 +144,11 @@ export async function bakePdf(input: MutateInput): Promise<Uint8Array> {
     const extra = input.rotations[original] ?? 0;
     const list = byPage.get(original) ?? [];
     const redacts = list.filter((a) => a.type === "redact");
+    const edits = list.filter((a) => a.type === "edit" || (a.type === "text" && a.text));
     let page: PDFPage;
     let skipRedact = false;
 
-    if (redacts.length > 0) {
+    if (redacts.length > 0 || edits.length > 0) {
       const raster = await rasterizePage({
         pageNumber: original + 1,
         extraRotation: extra,
@@ -168,7 +156,32 @@ export async function bakePdf(input: MutateInput): Promise<Uint8Array> {
         scale: 2,
         mime: "image/png",
       });
-      const img = await out.embedPng(raster.bytes);
+      const painted = edits.length
+        ? await paintTextOnRaster(
+            raster,
+            edits.map((a) => ({
+              x: a.x,
+              y: a.y,
+              w: a.w,
+              h: a.h,
+              text: a.text || "",
+              fontSize: a.fontSize,
+              fontFamily: a.fontFamily,
+              bold: a.bold,
+              italic: a.italic,
+              underline: a.underline,
+              strike: a.strike,
+              color: a.color,
+              align: a.align,
+              knockout: a.source === "pdf" || a.originX != null,
+              originX: a.originX,
+              originY: a.originY,
+              originW: a.originW,
+              originH: a.originH,
+            })),
+          )
+        : raster.bytes;
+      const img = await out.embedPng(painted);
       page = out.addPage([raster.widthPt, raster.heightPt]);
       page.drawImage(img, {
         x: 0,

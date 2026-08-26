@@ -9,7 +9,7 @@ import { pdfPagesToDocx } from "@/lib/convert";
 import { LANGS } from "@/lib/i18n";
 import { ingestFile, ingestPdf } from "@/lib/open-document";
 import { extractDocumentText, extractPageText } from "@/lib/pdf/engine";
-import { bakePdf, parsePageRange } from "@/lib/pdf/mutate";
+import { bakePdf } from "@/lib/pdf/mutate";
 import { readDriveFile, searchDriveFiles } from "@/lib/server/drive";
 import { translateDocumentText } from "@/lib/server/translate";
 import { knockOutWhite, loadImage, renderTypedSignature } from "@/lib/signatures";
@@ -616,16 +616,26 @@ function decodeDriveFile(data: unknown): Uint8Array | null {
 function RotatePanel() {
   const t = useT();
   const [mode, setMode] = useState<"this" | "all" | "range">("this");
-  const [range, setRange] = useState("");
+  const [fromPage, setFromPage] = useState("");
+  const [toPage, setToPage] = useState("");
   const currentPage = useAppStore((s) => s.currentPage);
   const pageCount = useAppStore((s) => s.pageCount);
   const pageOrder = useAppStore((s) => s.pageOrder);
   const rotatePages = useAppStore((s) => s.rotatePages);
 
+  useEffect(() => {
+    setFromPage(String(currentPage));
+    setToPage(String(currentPage));
+  }, [currentPage]);
+
   const targets = () => {
     if (mode === "this") return [pageOrder[currentPage - 1] ?? 0];
     if (mode === "all") return pageOrder.slice();
-    return parsePageRange(range, pageCount).map((display) => pageOrder[display] ?? display);
+    const a = Math.max(1, Math.min(pageCount, Number.parseInt(fromPage, 10) || 1));
+    const b = Math.max(1, Math.min(pageCount, Number.parseInt(toPage, 10) || a));
+    const lo = Math.min(a, b) - 1;
+    const hi = Math.max(a, b) - 1;
+    return pageOrder.slice(lo, hi + 1);
   };
 
   const go = (delta: number) => {
@@ -634,15 +644,35 @@ function RotatePanel() {
 
   return (
     <div className="flex flex-col gap-3">
+      <p className="text-sm text-muted">{t("rotate.hint")}</p>
       <div className="flex flex-wrap gap-1">
-        {(["this", "all", "range"] as const).map((m) => (
+        {(["this", "range", "all"] as const).map((m) => (
           <Button key={m} size="sm" variant={mode === m ? "default" : "outline"} onClick={() => setMode(m)}>
             {t(`rotate.${m}`)}
           </Button>
         ))}
       </div>
       {mode === "range" ? (
-        <Input placeholder={t("rotate.rangeHint")} value={range} onChange={(e) => setRange(e.target.value)} />
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-muted">{t("rotate.from")}</label>
+          <Input
+            type="number"
+            min={1}
+            max={pageCount}
+            className="w-20"
+            value={fromPage}
+            onChange={(e) => setFromPage(e.target.value)}
+          />
+          <label className="text-xs text-muted">{t("rotate.to")}</label>
+          <Input
+            type="number"
+            min={1}
+            max={pageCount}
+            className="w-20"
+            value={toPage}
+            onChange={(e) => setToPage(e.target.value)}
+          />
+        </div>
       ) : null}
       <div className="flex gap-2">
         <Button variant="secondary" onClick={() => go(-90)}>

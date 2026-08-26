@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Foliosyne",
+      "hasCanvas": false,
+      "bodyTextLen": 526,
+      "bodyTextHash": "15ee7379d6026ab073cec428e535175fe4a0071d750c5f4fca781847546028a0",
+      "bodyTextPrefix": "Foliosyne Documents, composed. English Español Français Deutsch ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Foliosyne",
+      "hasCanvas": false,
+      "bodyTextLen": 408,
+      "bodyTextHash": "9e24ed0d471912c0c511f4668561b24fb74c1e0ca72a1ceeb91e579860bd26f0",
+      "bodyTextPrefix": "Foliosyne A quieter studio for serious documents. Open a PDF or ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}

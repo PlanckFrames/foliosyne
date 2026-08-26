@@ -1,0 +1,245 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --font-display: "Fraunces", "Times New Roman", serif;
+  --font-sans: "Outfit", "Segoe UI", system-ui, sans-serif;
+  --font-signature: "Great Vibes", "Palatino Linotype", cursive;
+
+  --color-bg: var(--fs-bg);
+  --color-surface: var(--fs-surface);
+  --color-fg: var(--fs-fg);
+  --color-muted: var(--fs-muted);
+  --color-subtle: var(--fs-subtle);
+  --color-accent: var(--fs-accent);
+  --color-accent-fg: var(--fs-accent-fg);
+  --color-border: var(--fs-border);
+  --color-paper: var(--fs-paper);
+  --color-ink: var(--fs-ink);
+  --color-danger: var(--fs-danger);
+  --color-warn: var(--fs-warn);
+  --color-success: var(--fs-success);
+  --color-highlight: var(--fs-highlight);
+  --color-sticky: var(--fs-sticky);
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  --shadow-border:
+    0px 0px 0px 1px color-mix(in oklab, var(--fs-fg) 8%, transparent),
+    0px 1px 2px -1px color-mix(in oklab, var(--fs-fg) 8%, transparent),
+    0px 8px 24px -12px color-mix(in oklab, var(--fs-fg) 12%, transparent);
+}
+
+:root,
+[data-theme="light"] {
+  --fs-bg: #f4efe6;
+  --fs-surface: #fbf8f2;
+  --fs-fg: #1c1917;
+  --fs-muted: #6b645c;
+  --fs-subtle: #8a8278;
+  --fs-accent: #2f5d56;
+  --fs-accent-fg: #f4efe6;
+  --fs-border: color-mix(in oklab, #1c1917 12%, transparent);
+  --fs-paper: #efe8db;
+  --fs-ink: #1c1917;
+  --fs-danger: #8f3d3d;
+  --fs-warn: #8a6a2f;
+  --fs-success: #2f6b4f;
+  --fs-highlight: #e8c96a;
+  --fs-sticky: #f3e2a0;
+  --fs-grain: color-mix(in oklab, #1c1917 4%, transparent);
+}
+
+[data-theme="dark"] {
+  --fs-bg: #141311;
+  --fs-surface: #1c1b19;
+  --fs-fg: #f4efe6;
+  --fs-muted: #a39c93;
+  --fs-subtle: #7d776f;
+  --fs-accent: #7eb3ab;
+  --fs-accent-fg: #141311;
+  --fs-border: color-mix(in oklab, #f4efe6 12%, transparent);
+  --fs-paper: #1a1916;
+  --fs-ink: #f4efe6;
+  --fs-danger: #e09a9a;
+  --fs-warn: #d4bc7a;
+  --fs-success: #8fc9a8;
+  --fs-highlight: #c4a24a;
+  --fs-sticky: #6b5a28;
+  --fs-grain: color-mix(in oklab, #f4efe6 5%, transparent);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html,
+  body,
+  #app {
+    min-height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--fs-bg);
+    color: var(--fs-fg);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    font-family: var(--font-display);
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--fs-accent) 32%, transparent);
+    color: var(--fs-fg);
+  }
+}
+
+.file-ghost {
+  position: fixed;
+  left: -200px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.paper-grain {
+  background-image:
+    radial-gradient(var(--fs-grain) 0.6px, transparent 0.6px),
+    radial-gradient(color-mix(in oklab, var(--fs-fg) 3%, transparent) 0.8px, transparent 0.8px);
+  background-size: 7px 7px, 13px 13px;
+  background-position: 0 0, 4px 6px;
+}
+
+.text-layer,
+.textLayer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  line-height: 1;
+  opacity: 1;
+  text-align: initial;
+  pointer-events: auto;
+}
+
+.text-layer span,
+.text-layer br,
+.textLayer span,
+.textLayer br {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+
+.text-layer span::selection,
+.textLayer span::selection {
+  background: color-mix(in oklab, var(--fs-accent) 38%, transparent);
+  color: transparent;
+}
+
+.annot-layer {
+  position: absolute;
+  inset: 0;
+}
+
+@media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  body.folio-printing > *:not(#folio-print) {
+    display: none !important;
+  }
+
+  .no-print,
+  [data-radix-dialog-overlay],
+  [data-radix-dialog-content],
+  [data-sonner-toaster],
+  [data-sonner-toast] {
+    display: none !important;
+  }
+
+  #folio-print {
+    display: block !important;
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    line-height: 0;
+    font-size: 0;
+  }
+
+  #folio-print .folio-print-page {
+    display: block;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100%;
+    max-height: 10.99in;
+    object-fit: contain;
+    object-position: center top;
+    page-break-after: always;
+    break-after: page;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  #folio-print .folio-print-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+}
+
+#folio-print {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

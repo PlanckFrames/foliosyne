@@ -3,6 +3,7 @@ import { parseDocx, blocksToPdf } from "@/lib/convert";
 import { putFile } from "@/lib/idb";
 import { detectHeadings, openPdfBytes, outlineBookmarks } from "@/lib/pdf/engine";
 import { buildBlankPdf } from "@/lib/pdf/blank";
+import { DEFAULT_PAGE_SIZE } from "@/lib/page-format";
 import { buildSamplePdf } from "@/lib/pdf/sample";
 import { useAppStore } from "@/lib/store";
 import { uid } from "@/lib/utils";
@@ -106,16 +107,29 @@ export async function openBlankDocument() {
   store.setLoading(true);
   store.setStatus("Creating page…");
   try {
-    const blank = await buildBlankPdf("#F4EEE6", 1);
+    const size = DEFAULT_PAGE_SIZE;
+    const blank = await buildBlankPdf("#FFFFFF", 1, size.width, size.height);
     await ingestPdf(blank, "Untitled.pdf");
     const s = useAppStore.getState();
-    s.setPageBackground(0, "#F4EEE6");
+    s.setBlank(true);
+    s.setPageBackground(0, "#FFFFFF");
+    s.setPageSize({ ...size });
     s.setTool("edit");
   } catch (err) {
     store.setLoading(false);
     store.setStatus("");
     toast.error(err instanceof Error ? err.message : "Could not create a blank PDF.");
   }
+}
+
+export async function rebuildBlankAtSize(width: number, height: number) {
+  const s = useAppStore.getState();
+  if (!s.isBlank) return;
+  const color = s.pageBackgrounds[s.pageOrder[0] ?? 0] || "#FFFFFF";
+  const blank = await buildBlankPdf(color, s.pageCount, width, height);
+  const result = await openPdfBytes(blank);
+  if (!result.ok) return;
+  s.replaceBytes(blank);
 }
 
 export async function openSampleDocument() {

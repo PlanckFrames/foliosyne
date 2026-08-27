@@ -6,6 +6,7 @@ import { seedPageEdits } from "@/lib/edit-pdf";
 import { getPage, replacePaperPixels } from "@/lib/pdf/engine";
 import { otherBoxes, snapBox } from "@/lib/snap";
 import { rgbToHex } from "@/lib/color";
+import { contentBox, fitRect, hasMargins } from "@/lib/page-format";
 import { useAppStore, useT } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -150,10 +151,11 @@ export function PageView({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const sourceRef = useRef<HTMLCanvasElement | null>(null);
-  const paperRef = useRef("#F4EEE6");
+  const paperRef = useRef("#FFFFFF");
   const printMode = useAppStore((s) => s.printMode);
   const [visible, setVisible] = useState(displayIndex < 3);
   const [sheet, setSheet] = useState({ w: width, h: width * 1.294 });
+  const [native, setNative] = useState({ w: width, h: width * 1.294 });
   const [rasterReady, setRasterReady] = useState(0);
   const annotations = useAppStore((s) => s.annotations);
   const addAnnotation = useAppStore((s) => s.addAnnotation);
@@ -175,6 +177,8 @@ export function PageView({
   const guides = useAppStore((s) => s.guides);
   const setGuides = useAppStore((s) => s.setGuides);
   const pageColor = pageBackgrounds[originalIndex];
+  const pageSize = useAppStore((s) => s.pageSize);
+  const margins = useAppStore((s) => s.margins);
   const t = useT();
   const show = visible || printMode;
 
@@ -232,12 +236,16 @@ export function PageView({
       if (cancelled) return;
       const rot = ((page.rotate + rotation) % 360 + 360) % 360;
       const viewport = page.getViewport({ scale, rotation: rot });
-      setSheet({ w: viewport.width, h: viewport.height });
+      setNative({ w: viewport.width, h: viewport.height });
+      const fmt = useAppStore.getState().pageSize;
+      if (fmt) {
+        setSheet({ w: width, h: width * (fmt.height / fmt.width) });
+      } else {
+        setSheet({ w: viewport.width, h: viewport.height });
+      }
       const outputScale = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.floor(viewport.width * outputScale);
       canvas.height = Math.floor(viewport.height * outputScale);
-      canvas.style.width = `${viewport.width}px`;
-      canvas.style.height = `${viewport.height}px`;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
       const transform =
@@ -279,7 +287,7 @@ export function PageView({
       cancelled = true;
       textLayer?.cancel();
     };
-  }, [show, originalIndex, rotation, scale, pageColor]);
+  }, [show, originalIndex, rotation, scale, pageColor, width, pageSize?.width, pageSize?.height]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -294,7 +302,7 @@ export function PageView({
   }, [tool, originalIndex, rotation]);
 
   const local = (e: React.PointerEvent) => {
-    const r = hostRef.current!.getBoundingClientRect();
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
     return {
       x: (e.clientX - r.left) / r.width,
       y: (e.clientY - r.top) / r.height,
@@ -322,9 +330,8 @@ export function PageView({
       e.preventDefault();
       e.stopPropagation();
       const canvas = canvasRef.current;
-      const host = hostRef.current;
-      if (canvas && host) {
-        const r = host.getBoundingClientRect();
+      if (canvas) {
+        const r = canvas.getBoundingClientRect();
         const x = ((e.clientX - r.left) / r.width) * canvas.width;
         const y = ((e.clientY - r.top) / r.height) * canvas.height;
         const ctx = canvas.getContext("2d");
@@ -485,11 +492,35 @@ export function PageView({
     return true;
   });
 
+  const ptW = pageSize?.width ?? native.w / Math.max(0.01, scale);
+  const ptH = pageSize?.height ?? native.h / Math.max(0.01, scale);
+  const inner = contentBox(ptW, ptH, margins);
+  const innerPx = {
+    x: (inner.x / ptW) * sheet.w,
+    y: (inner.y / ptH) * sheet.h,
+    width: (inner.width / ptW) * sheet.w,
+    height: (inner.height / ptH) * sheet.h,
+  };
+  const dest =
+    pageSize || hasMargins(margins)
+      ? fitRect(native.w, native.h, innerPx)
+      : { x: 0, y: 0, width: sheet.w, height: sheet.h, scale: 1 };
+  const layerStyle = {
+    left: dest.x,
+    top: dest.y,
+    width: dest.width,
+    height: dest.height,
+  };
+
   return (
     <div
       ref={hostRef}
-      className="page-sheet relative mx-auto bg-white shadow-[var(--shadow-border)]"
-      style={{ width: sheet.w, height: sheet.h }}
+      className="page-sheet relative mx-auto shadow-[var(--shadow-border)]"
+      style={{
+        width: sheet.w,
+        height: sheet.h,
+        background: pageColor || "#FFFFFF",
+      }}
       data-page={displayIndex + 1}
       onPointerDown={(e) => {
         if ((e.target as HTMLElement).closest("[data-annot]")) return;
@@ -497,19 +528,29 @@ export function PageView({
         setActiveAnnotation(null);
       }}
     >
-      <canvas ref={canvasRef} className="absolute inset-0 size-full" />
+      <canvas
+        ref={canvasRef}
+        className="absolute"
+        style={layerStyle}
+      />
       <div
         ref={textRef}
         className="textLayer"
         onMouseUp={onTextSelect}
         style={{
+          left: dest.x,
+          top: dest.y,
+          width: native.w,
+          height: native.h,
+          transform: `scale(${dest.width / Math.max(1, native.w)})`,
+          transformOrigin: "top left",
           pointerEvents: tool === "select" && !hasEdits ? "auto" : "none",
           opacity: tool === "edit" || hasEdits ? 0 : 1,
         }}
       />
       <div
         className={cn(
-          "annot-layer absolute inset-0",
+          "annot-layer absolute",
           (tool === "select" || tool === "pan" || (tool === "edit" && editGesture === "pan")) &&
             !eyedropFor &&
             "pointer-events-none",
@@ -520,6 +561,7 @@ export function PageView({
           eyedropFor && "cursor-crosshair",
           tool === "edit" && editGesture === "select" && "cursor-default",
         )}
+        style={layerStyle}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

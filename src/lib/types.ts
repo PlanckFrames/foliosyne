@@ -32,7 +32,9 @@ export type Panel =
   | "help"
   | "cloud"
   | "save"
-  | "pageColor";
+  | "pageColor"
+  | "resize"
+  | "margins";
 
 export type TextAlign = "left" | "center" | "right";
 export type BulletStyle = "none" | "disc" | "circle" | "square" | "dash";

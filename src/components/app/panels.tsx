@@ -8,7 +8,19 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input, Textarea } from "@/components/ui/input";
 import { pdfPagesToDocx } from "@/lib/convert";
 import { LANGS } from "@/lib/i18n";
-import { ingestFile, ingestPdf } from "@/lib/open-document";
+import { ingestFile, ingestPdf, rebuildBlankAtSize } from "@/lib/open-document";
+import {
+  MARGIN_PRESETS,
+  PAGE_PRESETS,
+  inToPt,
+  mmToPt,
+  ptToIn,
+  ptToMm,
+  sizeFromPreset,
+  type MarginPreset,
+  type PageOrientation,
+  type PagePreset,
+} from "@/lib/page-format";
 import { extractDocumentText, extractPageText } from "@/lib/pdf/engine";
 import { bakePdf } from "@/lib/pdf/mutate";
 import { readDriveFile, searchDriveFiles } from "@/lib/server/drive";
@@ -35,6 +47,8 @@ export function AppPanels() {
     cloud: t("share.title"),
     save: t("save.title"),
     pageColor: t("color.page"),
+    resize: t("resize.title"),
+    margins: t("margins.title"),
   };
   const open = panel !== null;
   if (!open) return null;
@@ -51,6 +65,8 @@ export function AppPanels() {
         {panel === "help" && <HelpPanel />}
         {panel === "save" && <SavePanel />}
         {panel === "pageColor" && <PageColorPanel />}
+        {panel === "resize" && <ResizePanel />}
+        {panel === "margins" && <MarginsPanel />}
       </DialogContent>
     </Dialog>
   );
@@ -756,7 +772,7 @@ function PageColorPanel() {
   const eyedropFor = useAppStore((s) => s.eyedropFor);
   const setPanel = useAppStore((s) => s.setPanel);
   const orig = pageOrder[currentPage - 1] ?? 0;
-  const value = pageBackgrounds[orig] || "#F4EEE6";
+  const value = pageBackgrounds[orig] || "#FFFFFF";
 
   return (
     <div className="flex flex-col gap-3">
@@ -812,6 +828,8 @@ function SavePanel() {
         rasterScale: scale,
         jpegQuality: quality,
         compressAll: !keep,
+        pageSize: s.pageSize,
+        margins: s.margins,
       });
       downloadBlob(bytesToBlob(out, "application/pdf"), s.name || "foliosyne.pdf");
       s.markSaved();
@@ -872,3 +890,172 @@ function SavePanel() {
     </div>
   );
 }
+
+function ResizePanel() {
+  const t = useT();
+  const pageSize = useAppStore((s) => s.pageSize);
+  const setPageSize = useAppStore((s) => s.setPageSize);
+  const isBlank = useAppStore((s) => s.isBlank);
+  const setPanel = useAppStore((s) => s.setPanel);
+  const [preset, setPreset] = useState<PagePreset>(pageSize?.preset ?? "letter");
+  const [orient, setOrient] = useState<PageOrientation>(pageSize?.orientation ?? "portrait");
+  const [unit, setUnit] = useState<"in" | "mm">("in");
+  const [w, setW] = useState(pageSize ? ptToIn(pageSize.width) : 8.5);
+  const [h, setH] = useState(pageSize ? ptToIn(pageSize.height) : 11);
+
+  const apply = async () => {
+    let next;
+    if (preset === "custom") {
+      const width = unit === "mm" ? mmToPt(w) : inToPt(w);
+      const height = unit === "mm" ? mmToPt(h) : inToPt(h);
+      next = { preset: "custom" as const, width, height, orientation: orient };
+    } else {
+      next = sizeFromPreset(preset, orient);
+    }
+    setPageSize(next);
+    if (isBlank) await rebuildBlankAtSize(next.width, next.height);
+    setPanel(null);
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm text-muted">{t("resize.hint")}</p>
+      <p className="text-[11px] font-medium uppercase tracking-wide text-subtle">{t("resize.us")}</p>
+      <div className="flex flex-wrap gap-1">
+        {(["letter", "legal", "tabloid"] as const).map((p) => (
+          <Button key={p} size="sm" variant={preset === p ? "default" : "outline"} onClick={() => setPreset(p)}>
+            {PAGE_PRESETS[p].label.split("—")[0]}
+          </Button>
+        ))}
+      </div>
+      <p className="text-[11px] font-medium uppercase tracking-wide text-subtle">{t("resize.iso")}</p>
+      <div className="flex flex-wrap gap-1">
+        {(["a3", "a4", "a5", "a6"] as const).map((p) => (
+          <Button key={p} size="sm" variant={preset === p ? "default" : "outline"} onClick={() => setPreset(p)}>
+            {p.toUpperCase()}
+          </Button>
+        ))}
+      </div>
+      <Button size="sm" variant={preset === "custom" ? "default" : "outline"} onClick={() => setPreset("custom")}>
+        {t("resize.custom")}
+      </Button>
+      {preset === "custom" ? (
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="flex flex-col gap-1 text-xs text-muted">
+            {t("resize.width")}
+            <Input type="number" min={1} step={0.1} className="w-24" value={w} onChange={(e) => setW(Number(e.target.value))} />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-muted">
+            {t("resize.height")}
+            <Input type="number" min={1} step={0.1} className="w-24" value={h} onChange={(e) => setH(Number(e.target.value))} />
+          </label>
+          <div className="flex gap-1">
+            <Button size="sm" variant={unit === "in" ? "default" : "outline"} onClick={() => setUnit("in")}>
+              in
+            </Button>
+            <Button size="sm" variant={unit === "mm" ? "default" : "outline"} onClick={() => setUnit("mm")}>
+              mm
+            </Button>
+          </div>
+        </div>
+      ) : null}
+      <div className="flex gap-1">
+        <Button size="sm" variant={orient === "portrait" ? "default" : "outline"} onClick={() => setOrient("portrait")}>
+          {t("resize.portrait")}
+        </Button>
+        <Button size="sm" variant={orient === "landscape" ? "default" : "outline"} onClick={() => setOrient("landscape")}>
+          {t("resize.landscape")}
+        </Button>
+      </div>
+      <Button onClick={() => void apply()}>{t("action.apply")}</Button>
+    </div>
+  );
+}
+
+function MarginsPanel() {
+  const t = useT();
+  const margins = useAppStore((s) => s.margins);
+  const marginPreset = useAppStore((s) => s.marginPreset);
+  const setMargins = useAppStore((s) => s.setMargins);
+  const setPanel = useAppStore((s) => s.setPanel);
+  const [preset, setPreset] = useState<MarginPreset>(marginPreset);
+  const [unit, setUnit] = useState<"in" | "mm">("in");
+  const toU = (pt: number) => (unit === "mm" ? ptToMm(pt) : ptToIn(pt));
+  const fromU = (n: number) => (unit === "mm" ? mmToPt(n) : inToPt(n));
+  const [vals, setVals] = useState({
+    top: toU(margins.top),
+    right: toU(margins.right),
+    bottom: toU(margins.bottom),
+    left: toU(margins.left),
+  });
+
+  const pick = (p: MarginPreset) => {
+    setPreset(p);
+    if (p === "custom") return;
+    const m = MARGIN_PRESETS[p];
+    setVals({ top: toU(m.top), right: toU(m.right), bottom: toU(m.bottom), left: toU(m.left) });
+  };
+
+  const apply = () => {
+    if (preset !== "custom") {
+      setMargins(MARGIN_PRESETS[preset], preset);
+    } else {
+      setMargins(
+        {
+          top: fromU(vals.top),
+          right: fromU(vals.right),
+          bottom: fromU(vals.bottom),
+          left: fromU(vals.left),
+        },
+        "custom",
+      );
+    }
+    setPanel(null);
+  };
+
+  const field = (key: "top" | "right" | "bottom" | "left") => (
+    <label className="flex flex-col gap-1 text-xs text-muted">
+      {t(`margins.${key}`)}
+      <Input
+        type="number"
+        min={0}
+        step={0.1}
+        className="w-full"
+        value={vals[key]}
+        onChange={(e) => {
+          setPreset("custom");
+          setVals({ ...vals, [key]: Number(e.target.value) });
+        }}
+      />
+    </label>
+  );
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm text-muted">{t("margins.hint")}</p>
+      <div className="flex flex-wrap gap-1">
+        {(["none", "narrow", "normal", "wide", "custom"] as const).map((p) => (
+          <Button key={p} size="sm" variant={preset === p ? "default" : "outline"} onClick={() => pick(p)}>
+            {t(`margins.${p}`)}
+          </Button>
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {field("top")}
+        {field("bottom")}
+        {field("left")}
+        {field("right")}
+      </div>
+      <div className="flex gap-1">
+        <Button size="sm" variant={unit === "in" ? "default" : "outline"} onClick={() => setUnit("in")}>
+          in
+        </Button>
+        <Button size="sm" variant={unit === "mm" ? "default" : "outline"} onClick={() => setUnit("mm")}>
+          mm
+        </Button>
+      </div>
+      <Button onClick={apply}>{t("action.apply")}</Button>
+    </div>
+  );
+}
+

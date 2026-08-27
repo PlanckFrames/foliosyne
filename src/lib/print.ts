@@ -33,6 +33,9 @@ export async function printStudio() {
       rotations: s.rotations,
       annotations: s.annotations,
       openPassword: s.password || undefined,
+      pageBackgrounds: s.pageBackgrounds,
+      pageSize: s.pageSize,
+      margins: s.margins,
     });
     const url = bytesToBlobUrl(baked);
 

@@ -30,9 +30,11 @@ import {
   Undo2,
   Redo2,
   RotateCw,
+  Scaling,
   Save,
   Scan,
   Share2,
+  SquareDashed,
   Strikethrough,
   Subscript,
   Sun,
@@ -534,6 +536,26 @@ function ToolStrip() {
           onClick={() => setPanel("rotate")}
         >
           <RotateCw />
+        </Button>
+      </Tip>
+      <Tip label={t("resize.title")}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t("resize.title")}
+          onClick={() => setPanel("resize")}
+        >
+          <Scaling />
+        </Button>
+      </Tip>
+      <Tip label={t("margins.title")}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t("margins.title")}
+          onClick={() => setPanel("margins")}
+        >
+          <SquareDashed />
         </Button>
       </Tip>
       <div className="ms-auto flex items-center gap-1">

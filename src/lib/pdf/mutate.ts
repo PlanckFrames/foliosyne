@@ -9,6 +9,14 @@ import {
 import type { Annotation } from "@/lib/types";
 import { dataUrlToBytes } from "@/lib/utils";
 import { rasterizePage, paintTextOnRaster } from "./engine";
+import {
+  contentBox,
+  fitRect,
+  hasMargins,
+  type Margins,
+  type PageSize,
+} from "@/lib/page-format";
+import { hexToRgb } from "@/lib/color";
 
 export interface MutateInput {
   bytes: Uint8Array;
@@ -22,15 +30,29 @@ export interface MutateInput {
   rasterScale?: number;
   jpegQuality?: number;
   compressAll?: boolean;
+  pageSize?: PageSize | null;
+  margins?: Margins;
 }
 
-function pdfBox(page: PDFPage, a: Annotation) {
+function pdfBox(
+  page: PDFPage,
+  a: Annotation,
+  dest?: { x: number; y: number; width: number; height: number },
+) {
   const { width, height } = page.getSize();
+  const area = dest
+    ? {
+        x: dest.x,
+        y: height - dest.y - dest.height,
+        w: dest.width,
+        h: dest.height,
+      }
+    : { x: 0, y: 0, w: width, h: height };
   return {
-    x: a.x * width,
-    y: height - (a.y + a.h) * height,
-    w: a.w * width,
-    h: a.h * height,
+    x: area.x + a.x * area.w,
+    y: area.y + (1 - a.y - a.h) * area.h,
+    w: a.w * area.w,
+    h: a.h * area.h,
   };
 }
 
@@ -56,9 +78,10 @@ async function drawMarks(
   helv: PDFFont,
   helvBold: PDFFont,
   skipRedact: boolean,
+  dest?: { x: number; y: number; width: number; height: number },
 ) {
   for (const a of list) {
-    const box = pdfBox(page, a);
+    const box = pdfBox(page, a, dest);
     if (a.type === "redact") {
       if (skipRedact) continue;
       page.drawRectangle({
@@ -173,10 +196,13 @@ export async function bakePdf(input: MutateInput): Promise<Uint8Array> {
     const bg = input.pageBackgrounds?.[original];
     const scale = input.rasterScale ?? 2;
     const compress = !!input.compressAll;
+    const reflow =
+      !!input.pageSize || (!!input.margins && hasMargins(input.margins));
     let page: PDFPage;
     let skipRedact = false;
+    let dest: { x: number; y: number; width: number; height: number } | undefined;
 
-    if (redacts.length > 0 || edits.length > 0 || bg || compress) {
+    if (redacts.length > 0 || edits.length > 0 || bg || compress || reflow) {
       const raster = await rasterizePage({
         pageNumber: original + 1,
         extraRotation: extra,
@@ -213,13 +239,44 @@ export async function bakePdf(input: MutateInput): Promise<Uint8Array> {
         : raster.bytes;
       const baked = compress ? await ensureJpeg(painted, input.jpegQuality ?? 0.88) : painted;
       const img = compress ? await out.embedJpg(baked) : await out.embedPng(baked);
-      page = out.addPage([raster.widthPt, raster.heightPt]);
-      page.drawImage(img, {
-        x: 0,
-        y: 0,
-        width: raster.widthPt,
-        height: raster.heightPt,
-      });
+      const tw = input.pageSize?.width ?? raster.widthPt;
+      const th = input.pageSize?.height ?? raster.heightPt;
+      page = out.addPage([tw, th]);
+      if (bg) {
+        const c = hexToRgb(bg);
+        page.drawRectangle({
+          x: 0,
+          y: 0,
+          width: tw,
+          height: th,
+          color: rgb(c.r / 255, c.g / 255, c.b / 255),
+        });
+      } else if (reflow) {
+        page.drawRectangle({
+          x: 0,
+          y: 0,
+          width: tw,
+          height: th,
+          color: rgb(1, 1, 1),
+        });
+      }
+      if (reflow) {
+        const box = contentBox(tw, th, input.margins ?? { top: 0, right: 0, bottom: 0, left: 0 });
+        dest = fitRect(raster.widthPt, raster.heightPt, box);
+        page.drawImage(img, {
+          x: dest.x,
+          y: th - dest.y - dest.height,
+          width: dest.width,
+          height: dest.height,
+        });
+      } else {
+        page.drawImage(img, {
+          x: 0,
+          y: 0,
+          width: tw,
+          height: th,
+        });
+      }
       skipRedact = true;
     } else {
       const [copied] = await out.copyPages(src, [original]);
@@ -231,7 +288,7 @@ export async function bakePdf(input: MutateInput): Promise<Uint8Array> {
       page = copied;
     }
 
-    await drawMarks(page, list, out, helv, helvBold, skipRedact);
+    await drawMarks(page, list, out, helv, helvBold, skipRedact, dest);
   }
 
   if (input.userPassword) {

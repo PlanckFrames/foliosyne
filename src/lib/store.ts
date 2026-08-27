@@ -11,6 +11,8 @@ import type {
   UiLang,
 } from "./types";
 import type { SnapGuides } from "./snap";
+import type { Margins, MarginPreset, PageSize } from "./page-format";
+import { ZERO_MARGINS } from "./page-format";
 import { translate } from "./i18n";
 import { uid } from "./utils";
 
@@ -23,6 +25,9 @@ type DocSnapshot = {
   bookmarks: Bookmark[];
   userPassword: string;
   pageBackgrounds: Record<number, string>;
+  pageSize: PageSize | null;
+  margins: Margins;
+  marginPreset: MarginPreset;
 };
 
 function cloneSnap(s: {
@@ -32,6 +37,9 @@ function cloneSnap(s: {
   bookmarks: Bookmark[];
   userPassword: string;
   pageBackgrounds: Record<number, string>;
+  pageSize: PageSize | null;
+  margins: Margins;
+  marginPreset: MarginPreset;
 }): DocSnapshot {
   return {
     annotations: s.annotations.map((a) => ({ ...a })),
@@ -40,6 +48,9 @@ function cloneSnap(s: {
     bookmarks: s.bookmarks.map((b) => ({ ...b })),
     userPassword: s.userPassword,
     pageBackgrounds: { ...s.pageBackgrounds },
+    pageSize: s.pageSize ? { ...s.pageSize } : null,
+    margins: { ...s.margins },
+    marginPreset: s.marginPreset,
   };
 }
 
@@ -135,6 +146,10 @@ export interface AppState {
   pendingImage: string | null;
   eyedropFor: "font" | "page" | null;
   guides: SnapGuides | null;
+  isBlank: boolean;
+  pageSize: PageSize | null;
+  margins: Margins;
+  marginPreset: MarginPreset;
 
   setTheme: (theme: Theme) => void;
   setLang: (lang: UiLang) => void;
@@ -184,6 +199,10 @@ export interface AppState {
   setPendingImage: (url: string | null) => void;
   setEyedropFor: (v: "font" | "page" | null) => void;
   setGuides: (g: SnapGuides | null) => void;
+  setPageSize: (size: PageSize | null) => void;
+  setMargins: (m: Margins, preset?: MarginPreset) => void;
+  replaceBytes: (bytes: Uint8Array) => void;
+  setBlank: (v: boolean) => void;
 }
 
 const initialDoc = {
@@ -223,6 +242,10 @@ const initialDoc = {
   pendingImage: null as string | null,
   eyedropFor: null as "font" | "page" | null,
   guides: null as SnapGuides | null,
+  isBlank: false,
+  pageSize: null as PageSize | null,
+  margins: { ...ZERO_MARGINS },
+  marginPreset: "none" as MarginPreset,
 };
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -287,6 +310,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       pendingImage: null,
       eyedropFor: null,
       guides: null,
+      isBlank: false,
+      pageSize: null,
+      margins: { ...ZERO_MARGINS },
+      marginPreset: "none",
     }),
   setLoading: (loading) => set({ loading }),
   setStatus: (status) => set({ status }),
@@ -483,6 +510,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       bookmarks: prev.bookmarks,
       userPassword: prev.userPassword,
       pageBackgrounds: prev.pageBackgrounds,
+      pageSize: prev.pageSize,
+      margins: prev.margins,
+      marginPreset: prev.marginPreset,
       past: s.past.slice(0, -1),
       future: [...s.future, cloneSnap(s)],
       dirty: true,
@@ -506,6 +536,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       bookmarks: next.bookmarks,
       userPassword: next.userPassword,
       pageBackgrounds: next.pageBackgrounds,
+      pageSize: next.pageSize,
+      margins: next.margins,
+      marginPreset: next.marginPreset,
       future: s.future.slice(0, -1),
       past: [...s.past, cloneSnap(s)],
       dirty: true,
@@ -530,6 +563,31 @@ export const useAppStore = create<AppState>((set, get) => ({
   setPendingImage: (pendingImage) => set({ pendingImage }),
   setEyedropFor: (eyedropFor) => set({ eyedropFor }),
   setGuides: (guides) => set({ guides }),
+  setPageSize: (pageSize) => {
+    const s = get();
+    set({
+      past: [...s.past.slice(-79), cloneSnap(s)],
+      future: [],
+      pageSize,
+      dirty: true,
+      fit: "width",
+      zoomTick: s.zoomTick + 1,
+    });
+  },
+  setMargins: (margins, preset = "custom") => {
+    const s = get();
+    set({
+      past: [...s.past.slice(-79), cloneSnap(s)],
+      future: [],
+      margins: { ...margins },
+      marginPreset: preset,
+      dirty: true,
+      zoomTick: s.zoomTick + 1,
+    });
+  },
+  replaceBytes: (bytes) =>
+    set({ bytes, dirty: true, zoomTick: get().zoomTick + 1 }),
+  setBlank: (isBlank) => set({ isBlank }),
 }));
 
 export function useT() {

@@ -11,6 +11,7 @@ export function Viewer() {
   const tool = useAppStore((s) => s.tool);
   const editGesture = useAppStore((s) => s.editGesture);
   const zoomTick = useAppStore((s) => s.zoomTick);
+  const pageSize = useAppStore((s) => s.pageSize);
   const setScale = useAppStore((s) => s.setScale);
   const setCurrentPage = useAppStore((s) => s.setCurrentPage);
   const scroller = useRef<HTMLDivElement>(null);
@@ -22,7 +23,9 @@ export function Viewer() {
     let cancelled = false;
     const apply = async () => {
       const first = pageOrder[0] ?? 0;
-      const m = await getPageMetrics(first + 1, rotations[first] ?? 0);
+      const native = await getPageMetrics(first + 1, rotations[first] ?? 0);
+      const fmt = useAppStore.getState().pageSize;
+      const m = fmt ?? native;
       if (cancelled) return;
       const avail = Math.max(240, el.clientWidth - 48);
       const availH = Math.max(240, el.clientHeight - 48);
@@ -40,15 +43,20 @@ export function Viewer() {
     return () => {
       cancelled = true;
     };
-  }, [fit, pageOrder, rotations, setScale]);
+  }, [fit, pageOrder, rotations, setScale, pageSize]);
 
   useEffect(() => {
     if (fit !== "custom") return;
     const first = pageOrder[0] ?? 0;
+    const fmt = pageSize;
+    if (fmt) {
+      setPageWidth(fmt.width * scale);
+      return;
+    }
     void getPageMetrics(first + 1, rotations[first] ?? 0).then((m) => {
       setPageWidth(m.width * scale);
     });
-  }, [fit, scale, pageOrder, rotations]);
+  }, [fit, scale, pageOrder, rotations, pageSize]);
 
   useEffect(() => {
     const el = scroller.current;

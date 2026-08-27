@@ -16,7 +16,8 @@ export type AnnotationType =
   | "highlight"
   | "comment"
   | "redact"
-  | "signature";
+  | "signature"
+  | "image";
 
 export type Panel =
   | null
@@ -29,7 +30,9 @@ export type Panel =
   | "rotate"
   | "password"
   | "help"
-  | "cloud";
+  | "cloud"
+  | "save"
+  | "pageColor";
 
 export type TextAlign = "left" | "center" | "right";
 export type BulletStyle = "none" | "disc" | "circle" | "square" | "dash";

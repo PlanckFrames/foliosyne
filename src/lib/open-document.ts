@@ -2,6 +2,7 @@ import { toast } from "sonner";
 import { parseDocx, blocksToPdf } from "@/lib/convert";
 import { putFile } from "@/lib/idb";
 import { detectHeadings, openPdfBytes, outlineBookmarks } from "@/lib/pdf/engine";
+import { buildBlankPdf } from "@/lib/pdf/blank";
 import { buildSamplePdf } from "@/lib/pdf/sample";
 import { useAppStore } from "@/lib/store";
 import { uid } from "@/lib/utils";
@@ -97,6 +98,23 @@ export async function ingestFile(file: File) {
     useAppStore.getState().setLoading(false);
     useAppStore.getState().setStatus("");
     toast.error(err instanceof Error ? err.message : "Could not open that file.");
+  }
+}
+
+export async function openBlankDocument() {
+  const store = useAppStore.getState();
+  store.setLoading(true);
+  store.setStatus("Creating page…");
+  try {
+    const blank = await buildBlankPdf("#F4EEE6", 1);
+    await ingestPdf(blank, "Untitled.pdf");
+    const s = useAppStore.getState();
+    s.setPageBackground(0, "#F4EEE6");
+    s.setTool("edit");
+  } catch (err) {
+    store.setLoading(false);
+    store.setStatus("");
+    toast.error(err instanceof Error ? err.message : "Could not create a blank PDF.");
   }
 }
 

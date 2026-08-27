@@ -18,6 +18,10 @@ export interface MutateInput {
   userPassword?: string;
   ownerPassword?: string;
   openPassword?: string;
+  pageBackgrounds?: Record<number, string>;
+  rasterScale?: number;
+  jpegQuality?: number;
+  compressAll?: boolean;
 }
 
 function pdfBox(page: PDFPage, a: Annotation) {
@@ -99,7 +103,7 @@ async function drawMarks(
         borderColor: rgb(0.55, 0.45, 0.2),
         borderWidth: 0.6,
       });
-    } else if (a.type === "signature" && a.imageDataUrl) {
+    } else if ((a.type === "signature" || a.type === "image") && a.imageDataUrl) {
       try {
         const bytes = dataUrlToBytes(a.imageDataUrl);
         const isJpg = a.imageDataUrl.startsWith("data:image/jpeg");
@@ -121,6 +125,27 @@ async function drawMarks(
       }
     }
   }
+}
+
+async function ensureJpeg(bytes: Uint8Array, quality: number) {
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8) return bytes;
+  const blob = new Blob([new Uint8Array(bytes)]);
+  const bmp = await createImageBitmap(blob);
+  const canvas = document.createElement("canvas");
+  canvas.width = bmp.width;
+  canvas.height = bmp.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return bytes;
+  ctx.drawImage(bmp, 0, 0);
+  bmp.close();
+  const out = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("JPEG encode failed"))),
+      "image/jpeg",
+      quality,
+    );
+  });
+  return new Uint8Array(await out.arrayBuffer());
 }
 
 export async function bakePdf(input: MutateInput): Promise<Uint8Array> {
@@ -145,16 +170,21 @@ export async function bakePdf(input: MutateInput): Promise<Uint8Array> {
     const list = byPage.get(original) ?? [];
     const redacts = list.filter((a) => a.type === "redact");
     const edits = list.filter((a) => a.type === "edit" || (a.type === "text" && a.text));
+    const bg = input.pageBackgrounds?.[original];
+    const scale = input.rasterScale ?? 2;
+    const compress = !!input.compressAll;
     let page: PDFPage;
     let skipRedact = false;
 
-    if (redacts.length > 0 || edits.length > 0) {
+    if (redacts.length > 0 || edits.length > 0 || bg || compress) {
       const raster = await rasterizePage({
         pageNumber: original + 1,
         extraRotation: extra,
         redactions: redacts.map((a) => ({ x: a.x, y: a.y, w: a.w, h: a.h })),
-        scale: 2,
-        mime: "image/png",
+        scale,
+        mime: compress ? "image/jpeg" : "image/png",
+        quality: input.jpegQuality ?? 0.88,
+        paperColor: bg,
       });
       const painted = edits.length
         ? await paintTextOnRaster(
@@ -181,7 +211,8 @@ export async function bakePdf(input: MutateInput): Promise<Uint8Array> {
             })),
           )
         : raster.bytes;
-      const img = await out.embedPng(painted);
+      const baked = compress ? await ensureJpeg(painted, input.jpegQuality ?? 0.88) : painted;
+      const img = compress ? await out.embedJpg(baked) : await out.embedPng(baked);
       page = out.addPage([raster.widthPt, raster.heightPt]);
       page.drawImage(img, {
         x: 0,

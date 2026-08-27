@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import type { Annotation, Tool } from "@/lib/types";
 import { seedPageEdits } from "@/lib/edit-pdf";
 
-import { getPage } from "@/lib/pdf/engine";
+import { getPage, replacePaperPixels } from "@/lib/pdf/engine";
+import { otherBoxes, snapBox } from "@/lib/snap";
+import { rgbToHex } from "@/lib/color";
 import { useAppStore, useT } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -165,6 +167,14 @@ export function PageView({
   const setRightTab = useAppStore((s) => s.setRightTab);
   const editGesture = useAppStore((s) => s.editGesture);
   const setEditGesture = useAppStore((s) => s.setEditGesture);
+  const pageBackgrounds = useAppStore((s) => s.pageBackgrounds);
+  const pendingImage = useAppStore((s) => s.pendingImage);
+  const setPendingImage = useAppStore((s) => s.setPendingImage);
+  const eyedropFor = useAppStore((s) => s.eyedropFor);
+  const setEyedropFor = useAppStore((s) => s.setEyedropFor);
+  const guides = useAppStore((s) => s.guides);
+  const setGuides = useAppStore((s) => s.setGuides);
+  const pageColor = pageBackgrounds[originalIndex];
   const t = useT();
   const show = visible || printMode;
 
@@ -241,6 +251,8 @@ export function PageView({
       await task.promise;
       if (cancelled) return;
       canvas.dataset.rendered = "1";
+      const bg = useAppStore.getState().pageBackgrounds[originalIndex];
+      if (bg) replacePaperPixels(ctx, canvas.width, canvas.height, bg);
       const snap = document.createElement("canvas");
       snap.width = canvas.width;
       snap.height = canvas.height;
@@ -267,7 +279,7 @@ export function PageView({
       cancelled = true;
       textLayer?.cancel();
     };
-  }, [show, originalIndex, rotation, scale]);
+  }, [show, originalIndex, rotation, scale, pageColor]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -306,6 +318,29 @@ export function PageView({
 
   const onPointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement;
+    if (eyedropFor) {
+      e.preventDefault();
+      e.stopPropagation();
+      const canvas = canvasRef.current;
+      const host = hostRef.current;
+      if (canvas && host) {
+        const r = host.getBoundingClientRect();
+        const x = ((e.clientX - r.left) / r.width) * canvas.width;
+        const y = ((e.clientY - r.top) / r.height) * canvas.height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          const px = ctx.getImageData(Math.round(x), Math.round(y), 1, 1).data;
+          const hex = rgbToHex(px[0] ?? 0, px[1] ?? 0, px[2] ?? 0);
+          if (eyedropFor === "page") {
+            useAppStore.getState().setPageBackground(originalIndex, hex);
+          } else if (activeAnnotation) {
+            updateAnnotation(activeAnnotation, { color: hex });
+          }
+        }
+      }
+      setEyedropFor(null);
+      return;
+    }
     if (target.closest("[data-annot]")) return;
 
     if (tool === "select" || tool === "pan" || (tool === "edit" && editGesture === "pan")) {
@@ -338,6 +373,28 @@ export function PageView({
         });
       } else if (tool === "edit") {
         dropEmptyActive();
+        if (pendingImage) {
+          const img = new Image();
+          img.onload = () => {
+            const aspect = img.height / Math.max(1, img.width);
+            const w = 0.34;
+            const h = Math.min(0.45, w * aspect * (sheet.w / Math.max(1, sheet.h)));
+            addAnnotation({
+              type: "image",
+              pageIndex: originalIndex,
+              x: Math.min(p.x, 1 - w),
+              y: Math.min(p.y, 1 - h),
+              w,
+              h,
+              imageDataUrl: pendingImage,
+              text: "Picture",
+            });
+            setPendingImage(null);
+            setEditGesture("select");
+          };
+          img.src = pendingImage;
+          return;
+        }
         const id = addAnnotation({
           type: "edit",
           pageIndex: originalIndex,
@@ -454,11 +511,13 @@ export function PageView({
         className={cn(
           "annot-layer absolute inset-0",
           (tool === "select" || tool === "pan" || (tool === "edit" && editGesture === "pan")) &&
+            !eyedropFor &&
             "pointer-events-none",
           tool === "pan" && "cursor-grab",
           tool === "edit" && editGesture === "pan" && "cursor-grab",
           drawing && "cursor-crosshair",
           placing && "cursor-copy",
+          eyedropFor && "cursor-crosshair",
           tool === "edit" && editGesture === "select" && "cursor-default",
         )}
         onPointerDown={onPointerDown}
@@ -474,6 +533,7 @@ export function PageView({
             pageHeight={sheet.h}
             rotation={rotation}
             editing={tool === "edit"}
+            glow={!!guides?.glow.includes(a.id)}
             onSelect={() => setActiveAnnotation(a.id)}
             onChange={(patch) => {
               updateAnnotation(a.id, patch);
@@ -499,6 +559,24 @@ export function PageView({
             }}
           />
         ) : null}
+        {guides
+          ? guides.v.map((x) => (
+              <div
+                key={`v-${x}`}
+                className="pointer-events-none absolute top-0 z-30 h-full w-px bg-[#E20074]"
+                style={{ left: `${x * 100}%` }}
+              />
+            ))
+          : null}
+        {guides
+          ? guides.h.map((y) => (
+              <div
+                key={`h-${y}`}
+                className="pointer-events-none absolute start-0 z-30 h-px w-full bg-[#E20074]"
+                style={{ top: `${y * 100}%` }}
+              />
+            ))
+          : null}
       </div>
     </div>
   );
@@ -511,6 +589,7 @@ function AnnotBox({
   pageHeight,
   editing,
   rotation,
+  glow,
   onSelect,
   onChange,
   onRemove,
@@ -522,6 +601,7 @@ function AnnotBox({
   pageHeight: number;
   editing: boolean;
   rotation: number;
+  glow: boolean;
   onSelect: () => void;
   onChange: (patch: Partial<Annotation>) => void;
   onRemove: () => void;
@@ -559,7 +639,7 @@ function AnnotBox({
         type="button"
         data-annot={a.id}
         aria-label={t("tool.redact")}
-        className={cn("absolute bg-ink", active && "ring-2 ring-accent")}
+        className={cn("absolute bg-ink", active && "ring-2 ring-accent", glow && "ring-2 ring-emerald-500")}
         style={style}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => {
@@ -576,7 +656,7 @@ function AnnotBox({
         type="button"
         data-annot={a.id}
         aria-label={t("tool.highlight")}
-        className={cn("absolute bg-highlight/45", active && "ring-2 ring-accent")}
+        className={cn("absolute bg-highlight/45", active && "ring-2 ring-accent", glow && "ring-2 ring-emerald-500")}
         style={style}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => {
@@ -587,11 +667,12 @@ function AnnotBox({
       />
     );
   }
-  if (a.type === "signature") {
+  if (a.type === "signature" || a.type === "image") {
     return (
       <StampBox
         a={a}
         active={active}
+        glow={glow}
         pageWidth={pageWidth}
         pageHeight={pageHeight}
         rotation={rotation}
@@ -609,6 +690,7 @@ function AnnotBox({
         active={active}
         editing={editing}
         rotation={rotation}
+        glow={glow}
         pageWidth={pageWidth}
         pageHeight={pageHeight}
         inputRef={inputRef}
@@ -693,6 +775,7 @@ function AnnotBox({
 function StampBox({
   a,
   active,
+  glow,
   pageWidth,
   pageHeight,
   rotation,
@@ -703,6 +786,7 @@ function StampBox({
 }: {
   a: Annotation;
   active: boolean;
+  glow: boolean;
   pageWidth: number;
   pageHeight: number;
   rotation: number;
@@ -713,6 +797,8 @@ function StampBox({
 }) {
   const tool = useAppStore((s) => s.tool);
   const editGesture = useAppStore((s) => s.editGesture);
+  const setGuides = useAppStore((s) => s.setGuides);
+  const annotations = useAppStore((s) => s.annotations);
   const locked = tool === "pan" || (tool === "edit" && editGesture === "pan");
   const drag = useRef<{
     kind: "move" | "resize";
@@ -745,22 +831,33 @@ function StampBox({
     if (!drag.current) return;
     const dx = (e.clientX - drag.current.px) / pageWidth;
     const dy = (e.clientY - drag.current.py) / pageHeight;
-    if (drag.current.kind === "move") {
-      onChange({
-        x: Math.max(0, Math.min(1 - drag.current.w, drag.current.x + dx)),
-        y: Math.max(0, Math.min(1 - drag.current.h, drag.current.y + dy)),
-      });
-    } else {
-      onChange({
-        w: Math.max(0.06, Math.min(1 - drag.current.x, drag.current.w + dx)),
-        h: Math.max(0.03, Math.min(1 - drag.current.y, drag.current.h + dy)),
-      });
-    }
+    const raw =
+      drag.current.kind === "move"
+        ? {
+            x: drag.current.x + dx,
+            y: drag.current.y + dy,
+            w: drag.current.w,
+            h: drag.current.h,
+          }
+        : {
+            x: drag.current.x,
+            y: drag.current.y,
+            w: drag.current.w + dx,
+            h: drag.current.h + dy,
+          };
+    const snapped = snapBox(
+      raw,
+      otherBoxes(annotations, a.id, a.pageIndex),
+      drag.current.kind,
+    );
+    setGuides(snapped.guides);
+    onChange(snapped.box);
   };
 
   const onDragUp = (e: React.PointerEvent) => {
     if (!drag.current) return;
     drag.current = null;
+    setGuides(null);
     if ((e.currentTarget as HTMLElement).hasPointerCapture(e.pointerId)) {
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     }
@@ -773,6 +870,7 @@ function StampBox({
         "absolute outline-none",
         !locked && "cursor-grab active:cursor-grabbing",
         active && "ring-2 ring-accent",
+        glow && "ring-2 ring-emerald-400 shadow-[0_0_0_2px_#34d399]",
       )}
       style={{
         left: `${a.x * 100}%`,
@@ -817,6 +915,7 @@ function EditBox({
   active,
   editing,
   rotation,
+  glow,
   pageWidth,
   pageHeight,
   inputRef,
@@ -828,6 +927,7 @@ function EditBox({
   active: boolean;
   editing: boolean;
   rotation: number;
+  glow: boolean;
   pageWidth: number;
   pageHeight: number;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -845,6 +945,8 @@ function EditBox({
     h: number;
   } | null>(null);
   const viewScale = useAppStore((s) => s.scale);
+  const setGuides = useAppStore((s) => s.setGuides);
+  const annotations = useAppStore((s) => s.annotations);
 
   const fontSize = (a.fontSize ?? 12) * viewScale;
   const prefix = a.list && a.list !== "none" ? (BULLET[a.list] ?? "") : "";
@@ -872,22 +974,33 @@ function EditBox({
     if (!drag.current) return;
     const dx = (e.clientX - drag.current.px) / pageWidth;
     const dy = (e.clientY - drag.current.py) / pageHeight;
-    if (drag.current.kind === "move") {
-      onChange({
-        x: Math.max(0, Math.min(1 - drag.current.w, drag.current.x + dx)),
-        y: Math.max(0, Math.min(1 - drag.current.h, drag.current.y + dy)),
-      });
-    } else {
-      onChange({
-        w: Math.max(0.04, Math.min(1 - drag.current.x, drag.current.w + dx)),
-        h: Math.max(0.018, Math.min(1 - drag.current.y, drag.current.h + dy)),
-      });
-    }
+    const raw =
+      drag.current.kind === "move"
+        ? {
+            x: drag.current.x + dx,
+            y: drag.current.y + dy,
+            w: drag.current.w,
+            h: drag.current.h,
+          }
+        : {
+            x: drag.current.x,
+            y: drag.current.y,
+            w: drag.current.w + dx,
+            h: drag.current.h + dy,
+          };
+    const snapped = snapBox(
+      raw,
+      otherBoxes(annotations, a.id, a.pageIndex),
+      drag.current.kind,
+    );
+    setGuides(snapped.guides);
+    onChange(snapped.box);
   };
 
   const onDragUp = (e: React.PointerEvent) => {
     if (!drag.current) return;
     drag.current = null;
+    setGuides(null);
     if ((e.currentTarget as HTMLElement).hasPointerCapture(e.pointerId)) {
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     }
@@ -921,7 +1034,10 @@ function EditBox({
     return (
       <div
         data-annot={a.id}
-        className="absolute overflow-hidden leading-none"
+        className={cn(
+          "absolute overflow-hidden leading-none",
+          glow && "ring-2 ring-emerald-400 shadow-[0_0_0_2px_#34d399]",
+        )}
         style={{
           left: `${a.x * 100}%`,
           top: `${a.y * 100}%`,
@@ -957,6 +1073,7 @@ function EditBox({
       className={cn(
         "absolute",
         chrome ? "ring-2 ring-accent" : "cursor-text",
+        glow && "ring-2 ring-emerald-400 shadow-[0_0_0_2px_#34d399]",
       )}
       style={{
         left: `${a.x * 100}%`,

@@ -10,6 +10,7 @@ import type {
   Tool,
   UiLang,
 } from "./types";
+import type { SnapGuides } from "./snap";
 import { translate } from "./i18n";
 import { uid } from "./utils";
 
@@ -21,6 +22,7 @@ type DocSnapshot = {
   pageOrder: number[];
   bookmarks: Bookmark[];
   userPassword: string;
+  pageBackgrounds: Record<number, string>;
 };
 
 function cloneSnap(s: {
@@ -29,6 +31,7 @@ function cloneSnap(s: {
   pageOrder: number[];
   bookmarks: Bookmark[];
   userPassword: string;
+  pageBackgrounds: Record<number, string>;
 }): DocSnapshot {
   return {
     annotations: s.annotations.map((a) => ({ ...a })),
@@ -36,6 +39,7 @@ function cloneSnap(s: {
     pageOrder: [...s.pageOrder],
     bookmarks: s.bookmarks.map((b) => ({ ...b })),
     userPassword: s.userPassword,
+    pageBackgrounds: { ...s.pageBackgrounds },
   };
 }
 
@@ -127,6 +131,10 @@ export interface AppState {
   printMode: boolean;
   past: DocSnapshot[];
   future: DocSnapshot[];
+  pageBackgrounds: Record<number, string>;
+  pendingImage: string | null;
+  eyedropFor: "font" | "page" | null;
+  guides: SnapGuides | null;
 
   setTheme: (theme: Theme) => void;
   setLang: (lang: UiLang) => void;
@@ -172,6 +180,10 @@ export interface AppState {
   seedEdits: (list: Annotation[]) => void;
   undo: () => void;
   redo: () => void;
+  setPageBackground: (pageIndex: number | "all", hex: string) => void;
+  setPendingImage: (url: string | null) => void;
+  setEyedropFor: (v: "font" | "page" | null) => void;
+  setGuides: (g: SnapGuides | null) => void;
 }
 
 const initialDoc = {
@@ -207,6 +219,10 @@ const initialDoc = {
   printMode: false,
   past: [] as DocSnapshot[],
   future: [] as DocSnapshot[],
+  pageBackgrounds: {} as Record<number, string>,
+  pendingImage: null as string | null,
+  eyedropFor: null as "font" | "page" | null,
+  guides: null as SnapGuides | null,
 };
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -267,6 +283,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       printMode: false,
       past: [],
       future: [],
+      pageBackgrounds: {},
+      pendingImage: null,
+      eyedropFor: null,
+      guides: null,
     }),
   setLoading: (loading) => set({ loading }),
   setStatus: (status) => set({ status }),
@@ -462,6 +482,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       pageOrder: prev.pageOrder,
       bookmarks: prev.bookmarks,
       userPassword: prev.userPassword,
+      pageBackgrounds: prev.pageBackgrounds,
       past: s.past.slice(0, -1),
       future: [...s.future, cloneSnap(s)],
       dirty: true,
@@ -484,6 +505,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       pageOrder: next.pageOrder,
       bookmarks: next.bookmarks,
       userPassword: next.userPassword,
+      pageBackgrounds: next.pageBackgrounds,
       future: s.future.slice(0, -1),
       past: [...s.past, cloneSnap(s)],
       dirty: true,
@@ -491,6 +513,23 @@ export const useAppStore = create<AppState>((set, get) => ({
       zoomTick: s.zoomTick + 1,
     });
   },
+  setPageBackground: (pageIndex, hex) => {
+    const s = get();
+    set({
+      past: [...s.past.slice(-79), cloneSnap(s)],
+      future: [],
+    });
+    const pageBackgrounds = { ...s.pageBackgrounds };
+    if (pageIndex === "all") {
+      for (const i of s.pageOrder) pageBackgrounds[i] = hex;
+    } else {
+      pageBackgrounds[pageIndex] = hex;
+    }
+    set({ pageBackgrounds, dirty: true, zoomTick: s.zoomTick + 1 });
+  },
+  setPendingImage: (pendingImage) => set({ pendingImage }),
+  setEyedropFor: (eyedropFor) => set({ eyedropFor }),
+  setGuides: (guides) => set({ guides }),
 }));
 
 export function useT() {

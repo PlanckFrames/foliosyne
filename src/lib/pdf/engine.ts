@@ -355,6 +355,7 @@ export async function rasterizePage(opts: {
   scale?: number;
   mime?: "image/png" | "image/jpeg";
   quality?: number;
+  paperColor?: string;
 }): Promise<{
   bytes: Uint8Array;
   widthPx: number;
@@ -393,6 +394,10 @@ export async function rasterizePage(opts: {
   }
   if (lastError) throw lastError;
 
+  if (opts.paperColor) {
+    replacePaperPixels(ctx, canvas.width, canvas.height, opts.paperColor);
+  }
+
   if (opts.redactions?.length) {
     ctx.fillStyle = "#000000";
     for (const r of opts.redactions) {
@@ -423,6 +428,36 @@ export async function rasterizePage(opts: {
     widthPt: base.width,
     heightPt: base.height,
   };
+}
+
+export function replacePaperPixels(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  hex: string,
+) {
+  const raw = hex.replace("#", "");
+  if (raw.length !== 6) return;
+  const nr = Number.parseInt(raw.slice(0, 2), 16);
+  const ng = Number.parseInt(raw.slice(2, 4), 16);
+  const nb = Number.parseInt(raw.slice(4, 6), 16);
+  const img = ctx.getImageData(0, 0, w, h);
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const r = d[i] ?? 0;
+    const g = d[i + 1] ?? 0;
+    const b = d[i + 2] ?? 0;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const lum = (r + g + b) / 3;
+    const sat = max === 0 ? 0 : (max - min) / max;
+    if (lum > 205 && sat < 0.22) {
+      d[i] = nr;
+      d[i + 1] = ng;
+      d[i + 2] = nb;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
 }
 
 function rgbHex(r: number, g: number, b: number) {

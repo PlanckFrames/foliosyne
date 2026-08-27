@@ -8,11 +8,13 @@ import {
   ChevronDown,
   ChevronUp,
   FileOutput,
+  FilePlus,
   FileUp,
   Globe,
   Hand,
   HelpCircle,
   Highlighter,
+  ImagePlus,
   Italic,
   Languages,
   List,
@@ -21,6 +23,7 @@ import {
   MessageSquare,
   Moon,
   MousePointer2,
+  Palette,
   Pencil,
   PenLine,
   Printer,
@@ -45,7 +48,7 @@ import { Button } from "@/components/ui/button";
 import { Tip, TooltipProvider } from "@/components/ui/tooltip";
 import { LANGS, langMeta } from "@/lib/i18n";
 import { getFile, listRecentMeta } from "@/lib/idb";
-import { ingestFile, ingestPdf, openSampleDocument } from "@/lib/open-document";
+import { ingestFile, ingestPdf, openBlankDocument, openSampleDocument } from "@/lib/open-document";
 import { seedPageEdits, EDIT_FONTS } from "@/lib/edit-pdf";
 import { detectHeadings } from "@/lib/pdf/engine";
 import { bakePdf } from "@/lib/pdf/mutate";
@@ -56,6 +59,7 @@ import { bytesToBlob, downloadBlob, formatBytes } from "@/lib/utils";
 import { FolioMark } from "./mark";
 import { AppPanels } from "./panels";
 import { FilePicker } from "./file-picker";
+import { ColorPop } from "./color-pop";
 import { scrollToPage, Viewer } from "./viewer";
 
 export function AppShell() {
@@ -163,7 +167,7 @@ function useHotkeys() {
       }
       if (meta && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        void saveCurrent();
+        setPanel("save");
       }
       if (meta && e.key.toLowerCase() === "p") {
         e.preventDefault();
@@ -306,8 +310,19 @@ function TopBar() {
             </Tip>
           )}
         </FilePicker>
+        <Tip label={t("file.blank")}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            type="button"
+            aria-label={t("file.blank")}
+            onClick={() => void openBlankDocument()}
+          >
+            <FilePlus />
+          </Button>
+        </Tip>
         <Tip label={t("action.save")}>
-          <Button variant="ghost" size="icon-sm" aria-label={t("action.save")} disabled={!bytes} onClick={() => void saveCurrent()}>
+          <Button variant="ghost" size="icon-sm" aria-label={t("action.save")} disabled={!bytes} onClick={() => setPanel("save")}>
             <Save />
           </Button>
         </Tip>
@@ -550,6 +565,12 @@ function EditBar() {
   const currentPage = useAppStore((s) => s.currentPage);
   const pageOrder = useAppStore((s) => s.pageOrder);
   const movePage = useAppStore((s) => s.movePage);
+  const setPanel = useAppStore((s) => s.setPanel);
+  const setPendingImage = useAppStore((s) => s.setPendingImage);
+  const setEyedropFor = useAppStore((s) => s.setEyedropFor);
+  const eyedropFor = useAppStore((s) => s.eyedropFor);
+  const picRef = useRef<HTMLInputElement>(null);
+  const [colorOpen, setColorOpen] = useState(false);
   const active = annotations.find((a) => a.id === activeAnnotation && a.type === "edit");
 
   if (tool !== "edit") return null;
@@ -697,13 +718,68 @@ function EditBar() {
           <Subscript />
         </Button>
       </Tip>
+      <div className="relative">
+        <button
+          type="button"
+          className="size-8 rounded-sm border border-border"
+          aria-label={t("edit.color")}
+          style={{ background: active?.color || "#1C1917" }}
+          onClick={() => setColorOpen((v) => !v)}
+        />
+        {colorOpen ? (
+          <div className="absolute start-0 top-9 z-40 rounded-md bg-surface p-2 shadow-[var(--shadow-border)]">
+            <ColorPop
+              value={active?.color || "#1C1917"}
+              eyedropActive={eyedropFor === "font"}
+              onEyedrop={() => {
+                setEyedropFor(eyedropFor === "font" ? null : "font");
+                setColorOpen(false);
+              }}
+              onChange={(hex) => patch({ color: hex })}
+            />
+          </div>
+        ) : null}
+      </div>
+      <Tip label={t("color.page")}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t("color.page")}
+          onClick={() => setPanel("pageColor")}
+        >
+          <Palette />
+        </Button>
+      </Tip>
       <input
-        type="color"
-        className="size-8 cursor-pointer rounded-sm border border-border bg-surface p-0.5"
-        aria-label={t("edit.color")}
-        value={active?.color || "#1C1917"}
-        onChange={(e) => patch({ color: e.target.value })}
+        ref={picRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/jpg,image/gif"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          e.currentTarget.value = "";
+          if (!f) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const url = String(reader.result || "");
+            if (!url) return;
+            setPendingImage(url);
+            setEditGesture("place");
+            setStatus(t("edit.pictureHint"));
+          };
+          reader.readAsDataURL(f);
+        }}
       />
+      <Tip label={t("edit.picture")}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => picRef.current?.click()}
+        >
+          <ImagePlus />
+          {t("edit.picture")}
+        </Button>
+      </Tip>
       <Tip label={t("edit.alignLeft")}>
         <Button
           variant="ghost"
@@ -1073,6 +1149,19 @@ function EmptyState() {
               }}
             >
               {t("file.browse")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              aria-label={t("file.blank")}
+              disabled={loading}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                void openBlankDocument();
+              }}
+            >
+              {t("file.blank")}
             </Button>
             <Button
               type="button"

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { CallToolResult } from "@/lib/app-data";
 import { redirectToLoginIfRequired } from "@/lib/app-data/login";
+import { ColorPop, PRESET_PAPER } from "./color-pop";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input, Textarea } from "@/components/ui/input";
@@ -15,7 +16,7 @@ import { translateDocumentText } from "@/lib/server/translate";
 import { knockOutWhite, loadImage, renderTypedSignature } from "@/lib/signatures";
 import { useAppStore, useT } from "@/lib/store";
 import type { SavedSignature, UiLang } from "@/lib/types";
-import { bytesToBlob, downloadBlob, stemFilename, uid } from "@/lib/utils";
+import { bytesToBlob, downloadBlob, formatBytes, stemFilename, uid } from "@/lib/utils";
 
 export function AppPanels() {
   const panel = useAppStore((s) => s.panel);
@@ -32,6 +33,8 @@ export function AppPanels() {
     password: t("file.passwordTitle"),
     help: t("help.title"),
     cloud: t("share.title"),
+    save: t("save.title"),
+    pageColor: t("color.page"),
   };
   const open = panel !== null;
   if (!open) return null;
@@ -46,6 +49,8 @@ export function AppPanels() {
         {panel === "rotate" && <RotatePanel />}
         {panel === "password" && <PasswordPanel />}
         {panel === "help" && <HelpPanel />}
+        {panel === "save" && <SavePanel />}
+        {panel === "pageColor" && <PageColorPanel />}
       </DialogContent>
     </Dialog>
   );
@@ -737,6 +742,133 @@ function HelpPanel() {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+function PageColorPanel() {
+  const t = useT();
+  const currentPage = useAppStore((s) => s.currentPage);
+  const pageOrder = useAppStore((s) => s.pageOrder);
+  const pageBackgrounds = useAppStore((s) => s.pageBackgrounds);
+  const setPageBackground = useAppStore((s) => s.setPageBackground);
+  const setEyedropFor = useAppStore((s) => s.setEyedropFor);
+  const eyedropFor = useAppStore((s) => s.eyedropFor);
+  const setPanel = useAppStore((s) => s.setPanel);
+  const orig = pageOrder[currentPage - 1] ?? 0;
+  const value = pageBackgrounds[orig] || "#F4EEE6";
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm text-muted">{t("color.hint")}</p>
+      <ColorPop
+        value={value}
+        presets={PRESET_PAPER}
+        eyedropActive={eyedropFor === "page"}
+        onEyedrop={() => {
+          setEyedropFor(eyedropFor === "page" ? null : "page");
+          setPanel(null);
+        }}
+        onChange={(hex) => setPageBackground(orig, hex)}
+      />
+      <div className="flex gap-2">
+        <Button size="sm" variant="secondary" onClick={() => setPageBackground("all", value)}>
+          {t("color.applyAll")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function SavePanel() {
+  const t = useT();
+  const bytes = useAppStore((s) => s.bytes);
+  const name = useAppStore((s) => s.name);
+  const [keep, setKeep] = useState(true);
+  const [pixel, setPixel] = useState(100);
+  const [sizePct, setSizePct] = useState(100);
+  const [busy, setBusy] = useState(false);
+  const original = bytes?.byteLength ?? 0;
+  const estimate = keep
+    ? original
+    : Math.max(12_000, Math.round(original * (pixel / 100) * (pixel / 100) * (sizePct / 100)));
+
+  const run = async () => {
+    const s = useAppStore.getState();
+    if (!s.bytes) return;
+    setBusy(true);
+    s.setStatus("saving");
+    try {
+      const scale = keep ? 2 : Math.max(0.8, 2 * (pixel / 100));
+      const quality = keep ? 0.92 : Math.max(0.35, Math.min(0.95, sizePct / 100));
+      const out = await bakePdf({
+        bytes: s.bytes,
+        pageOrder: s.pageOrder,
+        rotations: s.rotations,
+        annotations: s.annotations,
+        userPassword: s.userPassword || undefined,
+        openPassword: s.password || undefined,
+        pageBackgrounds: s.pageBackgrounds,
+        rasterScale: scale,
+        jpegQuality: quality,
+        compressAll: !keep,
+      });
+      downloadBlob(bytesToBlob(out, "application/pdf"), s.name || "foliosyne.pdf");
+      s.markSaved();
+      s.setPanel(null);
+      toast.success("PDF");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setBusy(false);
+      useAppStore.getState().setStatus("");
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm text-muted">{t("save.hint")}</p>
+      <p className="text-xs text-subtle">{t("save.original", { n: formatBytes(original) })}</p>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={keep} onChange={(e) => setKeep(e.target.checked)} />
+        {t("save.keep")}
+      </label>
+      {!keep ? (
+        <>
+          <label className="flex flex-col gap-1 text-xs text-muted">
+            {t("save.pixels")} · {pixel}%
+            <input
+              type="range"
+              min={50}
+              max={150}
+              value={pixel}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                setPixel(n);
+                setSizePct(Math.max(30, Math.min(150, Math.round(n * 0.85))));
+              }}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-muted">
+            {t("save.filesize")} · {sizePct}%
+            <input
+              type="range"
+              min={30}
+              max={150}
+              value={sizePct}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                setSizePct(n);
+                setPixel(Math.max(50, Math.min(150, Math.round(n / 0.85))));
+              }}
+            />
+          </label>
+        </>
+      ) : null}
+      <p className="text-sm tabular-nums">{t("save.estimate", { n: formatBytes(estimate) })}</p>
+      <Button disabled={busy || !bytes} onClick={() => void run()}>
+        {busy ? t("status.saving") : t("save.download")}
+      </Button>
     </div>
   );
 }
